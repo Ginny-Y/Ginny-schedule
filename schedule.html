@@ -4,32 +4,34 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>我的周计划表</title>
+    <!-- 引入 Supabase JS SDK -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         :root {
             --bg-color: #F5F5F7; --card-bg: #FFFFFF; --text-main: #1D1D1F;
             --text-secondary: #86868B; --accent-blue: #007AFF;
             --border-color: rgba(0, 0, 0, 0.08); --shadow: 0 4px 14px rgba(0, 0, 0, 0.05);
-            --radius-lg: 18px; --radius-md: 12px; --menu-bg: rgba(255, 255, 255, 0.95);
+            --radius-lg: 18px; --radius-md: 12px;
         }
 
         body {
             font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", sans-serif;
             background-color: var(--bg-color); color: var(--text-main);
-            margin: 0; padding: 40px 20px; display: flex; justify-content: center;
+            margin: 0; padding: 20px 10px; display: flex; justify-content: center;
         }
 
         .container { width: 100%; max-width: 1400px; }
 
-        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; position: relative;}
-        .header-left { display: flex; align-items: center; gap: 16px; }
-        .header-right { display: flex; align-items: center; gap: 12px; }
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; position: relative;}
+        .header-left { display: flex; align-items: center; gap: 12px; }
+        .header-right { display: flex; align-items: center; gap: 8px; }
         
-        .title-group { display: flex; align-items: center; gap: 16px; }
-        h1 { font-size: 28px; font-weight: 600; margin: 0; letter-spacing: -0.5px; }
-        .nav-btn-group { display: flex; gap: 8px; }
+        .title-group { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+        h1 { font-size: 24px; font-weight: 600; margin: 0; letter-spacing: -0.5px; }
+        .nav-btn-group { display: flex; gap: 6px; }
         .week-nav-btn {
             background: #FFFFFF; border: 1px solid var(--border-color); border-radius: 8px;
-            padding: 6px 12px; font-size: 13px; font-weight: 500; cursor: pointer; transition: 0.2s;
+            padding: 6px 10px; font-size: 13px; font-weight: 500; cursor: pointer; transition: 0.2s;
             color: var(--text-main); box-shadow: 0 2px 4px rgba(0,0,0,0.02);
         }
         .week-nav-btn:hover { background: #F5F5F7; }
@@ -37,16 +39,14 @@
         .dropdown { position: relative; display: inline-block; }
         .header-btn {
             background-color: var(--card-bg); color: var(--text-main); border: 1px solid var(--border-color);
-            padding: 9px 18px; border-radius: 20px; font-size: 14px; font-weight: 500;
+            padding: 8px 14px; border-radius: 20px; font-size: 13px; font-weight: 500;
             cursor: pointer; box-shadow: 0 2px 4px rgba(0,0,0,0.02); transition: all 0.2s;
-            display: flex; align-items: center; gap: 6px;
+            display: flex; align-items: center; gap: 4px;
         }
-        .header-btn:hover { background-color: #F5F5F7; }
         .header-btn.add-btn {
             background-color: var(--accent-blue); color: white; border: none;
             box-shadow: 0 2px 8px rgba(0, 122, 255, 0.3);
         }
-        .header-btn.add-btn:hover { opacity: 0.85; background-color: var(--accent-blue); }
 
         .dropdown-content {
             display: none; position: absolute; right: 0; top: calc(100% + 8px);
@@ -56,8 +56,8 @@
         }
         .dropdown-content.show { display: block; }
         .dropdown-item {
-            padding: 10px 16px; cursor: pointer; border-radius: 8px;
-            font-size: 14px; font-weight: 500; color: var(--text-main);
+            padding: 10px 14px; cursor: pointer; border-radius: 8px;
+            font-size: 13px; font-weight: 500; color: var(--text-main);
         }
         .dropdown-item:hover { background-color: #F5F5F7; }
 
@@ -72,31 +72,33 @@
         .nav-btn:hover { background: var(--accent-blue); color: white; }
         .list-selection { display: none; }
         .list-selection.active { display: block; }
-        .list-item { padding: 10px; font-size: 14px; cursor: pointer; border-radius: 8px; margin-bottom: 4px; }
+        .list-item { padding: 8px; font-size: 13px; cursor: pointer; border-radius: 8px; margin-bottom: 4px; }
         .list-item:hover { background: rgba(0,0,0,0.05); }
         .nav-back { font-size: 12px; color: var(--accent-blue); cursor: pointer; margin-bottom: 12px; display: inline-block; font-weight: 500;}
 
-        .main-content { display: flex; gap: 24px; align-items: flex-start; }
-        .timetable-wrapper { flex: 1; min-width: 0; }
+        /* 主体布局与自适应 */
+        .main-content { display: flex; gap: 20px; align-items: flex-start; }
+        .timetable-scroll-box { flex: 1; min-width: 0; width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; }
         .timetable {
             background: var(--card-bg); border-radius: var(--radius-lg); box-shadow: var(--shadow);
-            display: grid; grid-template-columns: 80px repeat(7, 1fr); border: 1px solid var(--border-color);
+            display: grid; grid-template-columns: 70px repeat(7, minmax(130px, 1fr)); border: 1px solid var(--border-color);
+            min-width: 980px; /* 保证手机上横向滑动时单元格不被压缩 */
         }
 
         .cell {
             text-align: center; border-right: 1px solid var(--border-color);
-            border-bottom: 1px solid var(--border-color); font-size: 14px;
-            position: relative; min-height: 60px; 
+            border-bottom: 1px solid var(--border-color); font-size: 13px;
+            position: relative; min-height: 56px; 
         }
         .cell.drag-over { background-color: rgba(0, 122, 255, 0.1); }
-        .cell.header-cell { font-weight: 600; background-color: #FAFAFA; color: var(--text-secondary); padding: 12px 4px; line-height: 1.4;}
+        .cell.header-cell { font-weight: 600; background-color: #FAFAFA; color: var(--text-secondary); padding: 10px 4px; line-height: 1.4;}
         .date-sub { font-size: 11px; font-weight: normal; opacity: 0.8; }
         
-        .cell.allday-cell { background-color: #FDFDFD; min-height: 50px; border-bottom: 2px solid var(--border-color); display: flex; flex-direction: column; gap: 4px; padding: 4px;}
+        .cell.allday-cell { background-color: #FDFDFD; min-height: 48px; border-bottom: 2px solid var(--border-color); display: flex; flex-direction: column; gap: 4px; padding: 4px;}
         .time-col { font-weight: 500; color: var(--text-secondary); background-color: #FAFAFA; font-size: 12px; display: flex; align-items: center; justify-content: center; }
 
         .spanning-row {
-            grid-column: 2 / -1; display: flex; gap: 8px; padding: 4px;
+            grid-column: 2 / -1; display: flex; gap: 6px; padding: 4px;
             background-color: #FDFDFD; border-bottom: 2px solid var(--border-color);
         }
         .spanning-block { flex: 1; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 500; cursor: pointer; box-shadow: 0 2px 4px rgba(0,0,0,0.06); transition: 0.3s; text-align: center; line-height: 1.3;}
@@ -108,66 +110,81 @@
             position: absolute; left: 2px; right: 2px; z-index: 10;
         }
         .plan-card.allday-card { position: relative; left: auto; right: auto; height: auto !important; margin-bottom: 2px; }
-        .plan-card:active, .spanning-block:active { cursor: grabbing; z-index: 20; }
         .time-label { font-size: 10px; opacity: 0.8; margin-bottom: 2px; display: block; }
-        
         .completed { background-color: #E5E5EA !important; color: #8E8E93 !important; text-decoration: line-through; box-shadow: none; }
 
+        /* 侧边进度条与手机端顶部平铺适配 */
         .progress-section {
             width: 280px; background: var(--card-bg); border-radius: var(--radius-lg);
-            padding: 20px; box-shadow: var(--shadow); flex-shrink: 0;
-            display: flex; flex-direction: column; min-height: 400px; max-height: calc(100vh - 120px);
+            padding: 16px; box-shadow: var(--shadow); flex-shrink: 0;
+            display: flex; flex-direction: column; min-height: 380px; max-height: calc(100vh - 120px);
         }
-        .progress-section h3 { margin-top: 0; font-size: 16px; margin-bottom: 16px; }
+        .progress-section h3 { margin-top: 0; font-size: 15px; margin-bottom: 12px; }
         
-        #progressContainer { flex: 1; overflow-y: auto; padding-right: 4px; }
-        .progress-item { margin-bottom: 16px; cursor: pointer; padding: 8px; border-radius: 8px; transition: background 0.2s;}
+        #progressContainer { flex: 1; overflow-y: auto; padding-right: 2px; }
+        .progress-item { margin-bottom: 12px; cursor: pointer; padding: 8px; border-radius: 8px; transition: background 0.2s;}
         .progress-item:hover { background: #FAFAFA; }
-        .progress-item-hint { font-size: 10px; color: var(--text-secondary); text-align: right; margin-top: 2px; opacity: 0;}
-        .progress-item:hover .progress-item-hint { opacity: 1; }
-        
-        .progress-header { display: flex; justify-content: space-between; font-size: 13px; font-weight: 500; margin-bottom: 8px; }
-        .progress-bar { display: flex; gap: 4px; height: 12px; border-radius: 6px; overflow: hidden; background: #F5F5F7;}
+        .progress-header { display: flex; justify-content: space-between; font-size: 12px; font-weight: 500; margin-bottom: 6px; }
+        .progress-bar { display: flex; gap: 3px; height: 10px; border-radius: 5px; overflow: hidden; background: #F5F5F7;}
         .progress-segment { flex: 1; height: 100%; transition: background-color 0.3s; }
         .progress-segment.done { background-color: #E5E5EA !important; }
         .progress-segment.missed { background-color: #FF3B30 !important; } 
-        .progress-fill { height: 100%; transition: width 0.3s ease; border-radius: 6px;}
+        .progress-fill { height: 100%; transition: width 0.3s ease; border-radius: 5px;}
 
         .trash-can {
-            margin-top: 16px; padding: 12px 16px; border-radius: 12px;
+            margin-top: 14px; padding: 10px 14px; border-radius: 12px;
             background: #FFF; color: #FF3B30; border: 1px dashed #FF3B30;
-            display: flex; align-items: center; gap: 8px; cursor: pointer; transition: 0.2s;
-            flex-shrink: 0;
+            display: flex; align-items: center; gap: 6px; cursor: pointer; transition: 0.2s; font-size: 13px;
         }
-        .trash-can.drag-over {
-            background: #FF3B30; color: #FFF; border-style: solid; transform: scale(1.02);
+        .trash-can.drag-over { background: #FF3B30; color: #FFF; border-style: solid; }
+
+        /* 手机端响应式专属排版 */
+        @media (max-width: 900px) {
+            body { padding: 12px 6px; }
+            .header { flex-direction: column; align-items: flex-start; gap: 12px; }
+            .header-right { align-self: flex-end; }
+            .main-content { flex-direction: column; }
+            
+            /* 进度条挪至顶部，横向滑动排列 */
+            .progress-section {
+                width: 100%; min-height: auto; max-height: none; box-sizing: border-box;
+                margin-bottom: 14px; padding: 12px;
+            }
+            #progressContainer {
+                display: flex; gap: 12px; overflow-x: auto; -webkit-overflow-scrolling: touch;
+            }
+            .progress-item {
+                min-width: 220px; flex-shrink: 0; background: #FAFAFA; margin-bottom: 0;
+            }
+            .trash-can { display: none; /* 手机端隐藏垃圾桶，使用双击交互 */ }
         }
 
+        /* 弹窗通用样式 */
         .modal-overlay {
             display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0;
             background: rgba(0, 0, 0, 0.3); backdrop-filter: blur(5px);
             justify-content: center; align-items: center; z-index: 1000;
         }
         .modal {
-            background: var(--card-bg); width: 460px; border-radius: var(--radius-lg);
-            padding: 30px; box-shadow: 0 20px 40px rgba(0,0,0,0.15); max-height: 90vh; overflow-y: auto;
+            background: var(--card-bg); width: 90%; max-width: 440px; border-radius: var(--radius-lg);
+            padding: 24px; box-shadow: 0 20px 40px rgba(0,0,0,0.15); max-height: 90vh; overflow-y: auto; box-sizing: border-box;
         }
-        .modal h2 { margin-top: 0; font-size: 20px; margin-bottom: 20px; }
-        .form-group { margin-bottom: 16px; display: flex; flex-direction: column; }
+        .modal h2 { margin-top: 0; font-size: 18px; margin-bottom: 16px; }
+        .form-group { margin-bottom: 14px; display: flex; flex-direction: column; }
         .form-group label { font-size: 13px; color: var(--text-secondary); margin-bottom: 6px; }
         .form-group input[type="text"], .form-group input[type="number"], .form-group input[type="date"], .form-group select {
             padding: 10px; border: 1px solid var(--border-color); border-radius: 8px; font-size: 14px; outline: none; background-color: #FAFAFA;
         }
-        .checkbox-group, .radio-group { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 8px;}
+        .checkbox-group, .radio-group { display: flex; gap: 10px; flex-wrap: wrap; }
         .day-cb-label { display: flex; align-items: center; font-size: 13px; gap: 4px; cursor: pointer; }
         
-        .color-options { display: flex; gap: 8px; margin-top: 5px; flex-wrap: wrap; }
+        .color-options { display: flex; gap: 8px; margin-top: 4px; flex-wrap: wrap; }
         .color-dot {
-            width: 28px; height: 28px; border-radius: 50%; cursor: pointer;
-            border: 2px solid transparent; box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            width: 26px; height: 26px; border-radius: 50%; cursor: pointer;
+            border: 2px solid transparent; box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
         .color-dot.selected { border-color: var(--text-main); transform: scale(1.1); }
-        .modal-actions { display: flex; justify-content: flex-end; gap: 12px; margin-top: 24px; }
+        .modal-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px; }
         .modal-actions button { padding: 8px 16px; border-radius: 16px; border: none; font-size: 14px; font-weight: 500; cursor: pointer; }
         .btn-cancel { background-color: #E5E5EA; color: var(--text-main); }
         .btn-save { background-color: var(--accent-blue); color: white; }
@@ -217,7 +234,17 @@
     </div>
 
     <div class="main-content">
-        <div class="timetable-wrapper">
+        <!-- 进度条面板（手机上自动置顶） -->
+        <div class="progress-section" id="progressSection">
+            <h3>目标完成进度</h3>
+            <div id="progressContainer"></div>
+            <div id="trashCan" class="trash-can">
+                <span>🗑️</span> <span style="flex:1; text-align: left;">拖至此处删除 (电脑端)</span>
+            </div>
+        </div>
+
+        <!-- 表格水平滚动容器 -->
+        <div class="timetable-scroll-box">
             <div class="timetable" id="timetable">
                 <div class="cell header-cell">时间</div>
                 <div class="cell header-cell" id="h-day-1">周一<br><span class="date-sub"></span></div>
@@ -238,42 +265,33 @@
                 <div class="cell allday-cell drop-zone" id="allday-7"></div>
             </div>
         </div>
-        
-        <div class="progress-section" id="progressSection">
-            <h3>目标完成进度</h3>
-            <div id="progressContainer"></div>
-            <div id="trashCan" class="trash-can">
-                <span style="font-size: 18px;">🗑️</span> 
-                <span style="flex:1; text-align: left;">拖至此处删除</span>
-            </div>
-        </div>
     </div>
 </div>
 
+<!-- 删除确认弹窗 -->
 <div class="modal-overlay" id="deleteModalOverlay">
     <div class="modal" style="width: 320px; text-align: center; padding: 24px;">
-        <h2 style="color: #FF3B30; margin-top:0; margin-bottom: 10px;">删除确认</h2>
-        <p style="font-size: 14px; color: var(--text-secondary); margin-bottom: 24px;">请选择删除范围：</p>
+        <h2 style="color: #FF3B30; margin-top:0; margin-bottom: 8px;">删除确认</h2>
+        <p style="font-size: 13px; color: var(--text-secondary); margin-bottom: 20px;">请选择删除范围：</p>
         <div style="display: flex; flex-direction: column; gap: 10px;">
             <button onclick="confirmDelete('single')" style="padding: 12px; border-radius: 10px; border: 1px solid var(--border-color); background: #FFF; font-weight:500; cursor:pointer;">删除此单次事件</button>
             <button onclick="confirmDelete('all')" style="padding: 12px; border-radius: 10px; border: none; background: #FF3B30; color: #FFF; font-weight:500; cursor:pointer;">删除全部关联事件</button>
-            <button onclick="closeDeleteModal()" style="padding: 12px; border-radius: 10px; border: none; background: #E5E5EA; margin-top: 8px; font-weight:500; cursor:pointer;">取消</button>
+            <button onclick="closeDeleteModal()" style="padding: 12px; border-radius: 10px; border: none; background: #E5E5EA; margin-top: 4px; font-weight:500; cursor:pointer;">取消</button>
         </div>
     </div>
 </div>
 
+<!-- 添加计划弹窗 -->
 <div class="modal-overlay" id="planModalOverlay">
     <div class="modal">
         <h2>添加计划</h2>
         <div class="form-group"><label>计划名称</label><input type="text" id="planTitle" placeholder="例如：阅读、会议"></div>
-        
         <div class="form-group">
             <div style="display: flex; gap: 10px;">
-                <div style="flex: 1;"><label>开始日期 (选填)</label><input type="date" id="planStartDate"></div>
+                <div style="flex: 1;"><label>开始日期</label><input type="date" id="planStartDate"></div>
                 <div style="flex: 1;"><label>结束日期 (选填)</label><input type="date" id="planEndDate"></div>
             </div>
         </div>
-
         <div class="form-group">
             <label>事件类型</label>
             <div class="radio-group">
@@ -281,7 +299,6 @@
                 <label class="day-cb-label"><input type="radio" name="isPlanRepeat" value="yes" onchange="togglePlanRepeat()"> 多个事件</label>
             </div>
         </div>
-        
         <div class="form-group" id="planRepeatDaysWrapper" style="display: none;">
             <label>分配星期 (多选)</label>
             <div class="checkbox-group">
@@ -294,12 +311,10 @@
                 <label class="day-cb-label"><input type="checkbox" name="planDays" value="7"> 日</label>
             </div>
         </div>
-        
         <div style="display: flex; gap: 10px;">
             <div class="form-group" style="flex: 1;"><label>开始时间</label><select id="planStartTime"></select></div>
             <div class="form-group" style="flex: 1;"><label>结束时间</label><select id="planEndTime"></select></div>
         </div>
-        
         <div class="form-group">
             <label>颜色标签</label>
             <div class="color-options plan-colors">
@@ -317,6 +332,7 @@
     </div>
 </div>
 
+<!-- 添加目标弹窗 -->
 <div class="modal-overlay" id="goalModalOverlay">
     <div class="modal">
         <h2 id="goalModalTitle">添加目标</h2>
@@ -331,16 +347,13 @@
                 <option value="其他">其他</option>
             </select>
         </div>
-        
         <div class="form-group"><label>具体名称 (选填)</label><input type="text" id="goalTitle" placeholder="例如：跑步 / 看书"></div>
-        
         <div class="form-group">
             <div style="display: flex; gap: 10px;">
                 <div style="flex: 1;"><label>开始日期 (选填)</label><input type="date" id="goalStartDate"></div>
                 <div style="flex: 1;"><label>结束日期 (选填)</label><input type="date" id="goalEndDate"></div>
             </div>
         </div>
-
         <div id="weightLossFields" style="display: none; background: #FAFAFA; padding: 12px; border-radius: 8px; margin-bottom: 16px;">
             <div style="display: flex; gap: 10px;">
                 <div class="form-group" style="flex: 1;"><label>当前体重(kg)</label><input type="number" id="initWeight"></div>
@@ -351,11 +364,9 @@
             </div>
             <div class="form-group"><label>每周期 Check 次数</label><input type="number" id="weightCheckCount" value="3" min="1" max="10"></div>
         </div>
-
         <div id="savingFields" style="display: none; background: #FFF9E6; padding: 12px; border-radius: 8px; margin-bottom: 16px;">
             <div class="form-group"><label>目标金额 (元)</label><input type="number" id="targetAmount" placeholder="例如: 5000"></div>
         </div>
-
         <div id="learningOtherFields" style="display: none;">
             <div class="form-group">
                 <label>事件类型</label>
@@ -364,10 +375,9 @@
                     <label class="day-cb-label"><input type="radio" name="isGoalRepeat" value="yes" onchange="toggleGoalRepeat()"> 多个事件</label>
                 </div>
             </div>
-            
             <div class="form-group" id="goalRepeatDaysWrapper" style="display: none;">
                 <label>分配星期 (多选)</label>
-                <div class="checkbox-group" id="goalDaysCheckboxContainer">
+                <div class="checkbox-group">
                     <label class="day-cb-label"><input type="checkbox" name="goalDays" value="1"> 一</label>
                     <label class="day-cb-label"><input type="checkbox" name="goalDays" value="2"> 二</label>
                     <label class="day-cb-label"><input type="checkbox" name="goalDays" value="3"> 三</label>
@@ -381,7 +391,6 @@
                 <label>每天需要完成几次？</label><input type="number" id="otherGoalCount" value="1" min="1">
             </div>
         </div>
-
         <div class="form-group"><label>颜色标签</label>
             <div class="color-options goal-colors">
                 <div class="color-dot selected" data-bg="#3C5954" data-text="#FFFFFF" style="background-color: #3C5954;"></div>
@@ -399,17 +408,63 @@
 </div>
 
 <script>
+    // --- 【重要】填写你的 Supabase 配置信息 ---
+    const SUPABASE_URL = 'https://lnzghbmfhfplwhaqbiii.supabase.co';
+    const SUPABASE_ANON_KEY = 'sb_publishable_rCzL5M-YI8DlyFpB6PF-4A_8-yJmCW1';
+    let supabaseClient = null;
+    if (SUPABASE_URL !== 'YOUR_SUPABASE_URL' && window.supabase) {
+        supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    }
+
+    // 本地与云端数据状态
     let plansData = JSON.parse(localStorage.getItem('myPlan_plans')) || [];
     let goalsData = JSON.parse(localStorage.getItem('myPlan_goals')) || [];
     let completionData = JSON.parse(localStorage.getItem('myPlan_completion')) || {}; 
     let activeWeekKey = '';
 
-    function saveDataToLocal() {
-        localStorage.setItem('myPlan_plans', JSON.stringify(plansData));
-        localStorage.setItem('myPlan_goals', JSON.stringify(goalsData));
-        localStorage.setItem('myPlan_completion', JSON.stringify(completionData));
+    // 双向同步：保存至 LocalStorage 并异步同步到 Supabase
+    async function syncData(isInitialFetch = false) {
+        if (!isInitialFetch) {
+            localStorage.setItem('myPlan_plans', JSON.stringify(plansData));
+            localStorage.setItem('myPlan_goals', JSON.stringify(goalsData));
+            localStorage.setItem('myPlan_completion', JSON.stringify(completionData));
+        }
+
+        if (supabaseClient) {
+            try {
+                if (isInitialFetch) {
+                    const { data, error } = await supabaseClient
+                        .from('schedule_data')
+                        .select('*')
+                        .eq('id', 'user_default')
+                        .single();
+                    if (data && !error) {
+                        plansData = data.plans || [];
+                        goalsData = data.goals || [];
+                        completionData = data.completion || {};
+                        localStorage.setItem('myPlan_plans', JSON.stringify(plansData));
+                        localStorage.setItem('myPlan_goals', JSON.stringify(goalsData));
+                        localStorage.setItem('myPlan_completion', JSON.stringify(completionData));
+                        renderBoard();
+                    }
+                } else {
+                    await supabaseClient
+                        .from('schedule_data')
+                        .upsert({
+                            id: 'user_default',
+                            plans: plansData,
+                            goals: goalsData,
+                            completion: completionData,
+                            updated_at: new Date()
+                        });
+                }
+            } catch (err) {
+                console.warn("云端同步失败，已保留本地离线数据", err);
+            }
+        }
     }
 
+    // 初始化时间轴
     const timetable = document.getElementById('timetable');
     const timeSelects = [document.getElementById('planStartTime'), document.getElementById('planEndTime')];
     for (let i = 6; i <= 23; i++) {
@@ -446,7 +501,6 @@
         document.getElementById('pageTitle').innerText = `本周计划 (${activeMonday.getFullYear()}年)`;
         renderBoard(); 
     }
-    updateWeekView();
 
     function goToPrevWeek() { activeMonday.setDate(activeMonday.getDate() - 7); updateWeekView(); }
     function goToNextWeek() { activeMonday.setDate(activeMonday.getDate() + 7); updateWeekView(); }
@@ -467,7 +521,6 @@
         if(level === 'months') document.getElementById('monthSelection').classList.add('active');
         if(level === 'weeks') document.getElementById('weekSelection').classList.add('active');
     }
-    
     let selYear, selMonth;
     function showMonths(year) { selYear = year; showCalendarLevel('months'); }
     function showWeeks(month) {
@@ -486,20 +539,51 @@
         let firstMonday = getMonday(firstDateOfMonth);
         activeMonday = new Date(firstMonday);
         activeMonday.setDate(firstMonday.getDate() + (weekIndex - 1) * 7);
-        updateWeekView();
-        closeDropdowns(); 
+        updateWeekView(); closeDropdowns(); 
     }
 
-    function openPlanModal() { document.getElementById('planModalOverlay').style.display = 'flex'; }
+    function openPlanModal() { 
+        document.getElementById('planTitle').value = '';
+        document.getElementById('planStartDate').value = '';
+        document.getElementById('planEndDate').value = '';
+        document.querySelector('input[name="isPlanRepeat"][value="no"]').checked = true;
+        togglePlanRepeat();
+        document.querySelectorAll('input[name="planDays"]').forEach(cb => cb.checked = false);
+        document.getElementById('planStartTime').selectedIndex = 0;
+        document.getElementById('planEndTime').selectedIndex = 0;
+        resetColorPicker('.plan-colors .color-dot');
+        document.getElementById('planModalOverlay').style.display = 'flex'; 
+    }
+
     function openGoalModal(editId = null) {
         document.getElementById('editGoalId').value = editId || "";
         document.getElementById('goalModalTitle').innerText = editId ? "编辑目标" : "添加目标";
-        if(!editId) { document.getElementById('goalType').value = ""; document.getElementById('goalType').disabled = false; handleGoalTypeChange(); } 
-        else { document.getElementById('goalType').disabled = true; }
+        if(!editId) { 
+            document.getElementById('goalType').value = ""; document.getElementById('goalType').disabled = false;
+            document.getElementById('goalTitle').value = '';
+            document.getElementById('goalStartDate').value = ''; document.getElementById('goalEndDate').value = '';
+            document.getElementById('initWeight').value = ''; document.getElementById('targetWeight').value = '';
+            document.getElementById('targetAmount').value = '';
+            document.querySelector('input[name="isGoalRepeat"][value="no"]').checked = true;
+            toggleGoalRepeat();
+            document.querySelectorAll('input[name="goalDays"]').forEach(cb => cb.checked = false);
+            resetColorPicker('.goal-colors .color-dot');
+            handleGoalTypeChange(); 
+        } else { 
+            document.getElementById('goalType').disabled = true; 
+        }
         document.getElementById('goalModalOverlay').style.display = 'flex'; 
     }
+
+    function resetColorPicker(selector) {
+        const dots = document.querySelectorAll(selector);
+        dots.forEach((dot, idx) => {
+            if (idx === 0) dot.classList.add('selected');
+            else dot.classList.remove('selected');
+        });
+    }
+
     function closeModals() { document.getElementById('planModalOverlay').style.display = 'none'; document.getElementById('goalModalOverlay').style.display = 'none'; }
-    
     function togglePlanRepeat() {
         const isRepeat = document.querySelector('input[name="isPlanRepeat"]:checked').value === 'yes';
         document.getElementById('planRepeatDaysWrapper').style.display = isRepeat ? 'block' : 'none';
@@ -513,7 +597,6 @@
         const type = document.getElementById('goalType').value;
         document.getElementById('weightLossFields').style.display = type === '减肥' ? 'block' : 'none';
         document.getElementById('savingFields').style.display = type === '攒钱' ? 'block' : 'none';
-        
         if(type === '学习' || type === '其他') {
             document.getElementById('learningOtherFields').style.display = 'block';
             document.getElementById('otherGoalCountWrapper').style.display = type === '其他' ? 'block' : 'none';
@@ -523,20 +606,21 @@
     }
 
     function setupColorPicker(selector) {
-        let bg = '#3C5954', text = '#FFFFFF';
         document.querySelectorAll(selector).forEach(dot => {
             dot.addEventListener('click', function() {
                 document.querySelectorAll(selector).forEach(d => d.classList.remove('selected'));
                 this.classList.add('selected');
-                bg = this.getAttribute('data-bg'); text = this.getAttribute('data-text');
             });
         });
-        return () => ({ bg, text });
+        return () => {
+            const active = document.querySelector(selector + '.selected') || document.querySelector(selector);
+            return { bg: active.getAttribute('data-bg'), text: active.getAttribute('data-text') };
+        };
     }
     const getPlanColor = setupColorPicker('.plan-colors .color-dot');
     const getGoalColor = setupColorPicker('.goal-colors .color-dot');
 
-    // --- 核心渲染逻辑 (加入向前兼容防护) ---
+    // 核心渲染逻辑
     function renderBoard() {
         activeWeekKey = getWeekKey(activeMonday);
         document.querySelectorAll('.drop-zone, .allday-cell.drop-zone').forEach(cell => cell.innerHTML = '');
@@ -545,23 +629,17 @@
         let weekStart = new Date(activeMonday); weekStart.setHours(0,0,0,0);
         let weekEnd = new Date(activeMonday); weekEnd.setDate(weekEnd.getDate() + 6); weekEnd.setHours(23,59,59,999);
 
-        // 渲染计划
         plansData.forEach(p => {
-            // 【关键修复】向前兼容：旧数据若没有 startDate，默认视为永久有效显示
             let pStart = p.startDate ? new Date(p.startDate + "T00:00:00") : new Date("2000-01-01");
             let pEnd = p.endDate ? new Date(p.endDate + "T23:59:59") : new Date("2100-12-31");
-            
             if (pEnd < weekStart || pStart > weekEnd) return; 
 
             for(let i=1; i<=7; i++) {
                 let currentDay = new Date(activeMonday);
                 currentDay.setDate(currentDay.getDate() + (i-1));
                 
-                // 兼容逻辑：如果没有绑定日期，或者处于日期区间内
                 if (!p.startDate || (currentDay >= pStart && currentDay <= pEnd)) {
-                    // 如果是旧数据（没有设置 isRepeat 模式但有 days 列表），或者属于选中的星期
                     if (p.isRepeat === undefined || !p.isRepeat || p.days.includes(String(i))) {
-                        // 如果是老单次任务，只在选定星期显示
                         if(p.isRepeat !== undefined && !p.isRepeat && p.days && !p.days.includes(String(i))) continue;
 
                         let compKey = `${activeWeekKey}_${p.id}_${i}`;
@@ -581,7 +659,6 @@
             }
         });
 
-        // 渲染目标
         goalsData.forEach(g => {
             let gStart = g.startDate ? new Date(g.startDate + "T00:00:00") : new Date("2000-01-01");
             let gEnd = g.endDate ? new Date(g.endDate + "T23:59:59") : new Date("2100-12-31");
@@ -597,6 +674,12 @@
                 block.draggable = true; block.dataset.objId = g.id; block.dataset.subKey = 'saving';
                 block.addEventListener('dragstart', handleDragStart); block.addEventListener('dragend', handleDragEnd);
                 
+                // 双击删除支持
+                block.addEventListener('dblclick', function(e) {
+                    e.stopPropagation();
+                    openDeleteModal(g.id, 'saving');
+                });
+                
                 block.style.backgroundColor = g.color.bg; block.style.color = g.color.text;
                 block.innerHTML = `<span>${g.title} <br><small>${g.dateRangeStr ? '('+g.dateRangeStr+')' : '(攒钱打卡)'}</small></span>`;
                 block.addEventListener('click', function(e) {
@@ -605,7 +688,7 @@
                     if(amount && !isNaN(amount)) {
                         g.saved += parseFloat(amount);
                         if(g.saved >= g.targetAmount) { alert('恭喜！攒钱目标达成！'); }
-                        saveDataToLocal(); renderBoard(); 
+                        syncData(); renderBoard(); 
                     }
                 });
                 row.appendChild(block);
@@ -620,6 +703,10 @@
                     const block = document.createElement('div'); block.className = 'spanning-block';
                     block.draggable = true; block.dataset.objId = g.id; block.dataset.subKey = i;
                     block.addEventListener('dragstart', handleDragStart); block.addEventListener('dragend', handleDragEnd);
+                    block.addEventListener('dblclick', function(e) {
+                        e.stopPropagation();
+                        openDeleteModal(g.id, i);
+                    });
 
                     block.style.backgroundColor = g.color.bg; block.style.color = g.color.text;
                     if(completionData[compKey]) block.classList.add('completed');
@@ -636,7 +723,7 @@
                                 completionData[compKey] = true; this.classList.add('completed');
                             }
                         }
-                        saveDataToLocal(); renderProgressBars();
+                        syncData(); renderProgressBars();
                     });
                     row.appendChild(block);
                 }
@@ -687,6 +774,7 @@
         card.draggable = true;
         card.addEventListener('dragstart', handleDragStart); card.addEventListener('dragend', handleDragEnd);
         
+        // 单击打卡完成
         card.addEventListener('click', function(e) {
             e.stopPropagation();
             let compKey = `${activeWeekKey}_${objId}_${subKey}`;
@@ -700,14 +788,21 @@
                     } else {
                         completionData[compKey] = false; this.classList.remove('completed'); g.completed--;
                     }
-                    saveDataToLocal(); renderProgressBars();
+                    syncData(); renderProgressBars();
                 }
             } else { 
                 completionData[compKey] = !isComplete;
                 this.classList.toggle('completed');
-                saveDataToLocal();
+                syncData();
             }
         });
+
+        // 核心增强：双击直接唤起删除确认框（替代手机端拖拽）
+        card.addEventListener('dblclick', function(e) {
+            e.stopPropagation();
+            openDeleteModal(objId, subKey);
+        });
+
         return card;
     }
 
@@ -715,6 +810,7 @@
     function handleDragStart(e) { draggedItem = this; setTimeout(() => this.style.opacity = '0.5', 0); }
     function handleDragEnd(e) { setTimeout(() => { draggedItem.style.opacity = '1'; draggedItem = null; }, 0); }
     
+    // 垃圾桶逻辑
     const trashCan = document.getElementById('trashCan');
     let pendingDeleteObjId = null;
     let pendingDeleteSubKey = null;
@@ -724,10 +820,14 @@
     trashCan.addEventListener('drop', e => {
         e.preventDefault(); trashCan.classList.remove('drag-over');
         if (!draggedItem) return;
-        pendingDeleteObjId = draggedItem.dataset.objId;
-        pendingDeleteSubKey = draggedItem.dataset.subKey;
-        if(pendingDeleteObjId) document.getElementById('deleteModalOverlay').style.display = 'flex';
+        openDeleteModal(draggedItem.dataset.objId, draggedItem.dataset.subKey);
     });
+
+    function openDeleteModal(objId, subKey) {
+        pendingDeleteObjId = objId;
+        pendingDeleteSubKey = subKey;
+        if(pendingDeleteObjId) document.getElementById('deleteModalOverlay').style.display = 'flex';
+    }
 
     function closeDeleteModal() { document.getElementById('deleteModalOverlay').style.display = 'none'; pendingDeleteObjId = null; pendingDeleteSubKey = null; }
     
@@ -750,7 +850,7 @@
                 }
             }
         }
-        saveDataToLocal(); closeDeleteModal(); renderBoard();
+        syncData(); closeDeleteModal(); renderBoard();
     }
 
     function handleDrop(e) {
@@ -799,7 +899,7 @@
                         completionData[newCompKey] = true; delete completionData[oldCompKey];
                     }
                 }
-                saveDataToLocal(); renderBoard(); 
+                syncData(); renderBoard(); 
             }
         }
     }
@@ -808,7 +908,7 @@
         const container = document.getElementById('progressContainer');
         container.innerHTML = '';
         if (goalsData.length === 0) {
-            container.innerHTML = '<div style="color:var(--text-secondary);font-size:13px;text-align:center;margin-top:40px;">暂无目标，点击右上角添加</div>';
+            container.innerHTML = '<div style="color:var(--text-secondary);font-size:12px;text-align:center;padding:12px 0;">暂无目标</div>';
             return;
         }
         
@@ -854,7 +954,6 @@
                 }
             }
             item.appendChild(header); item.appendChild(bar); 
-            item.innerHTML += `<div class="progress-item-hint">点击编辑该目标</div>`;
             container.appendChild(item);
         });
     }
@@ -907,7 +1006,7 @@
         days.forEach(d => pObj.layouts[d] = { ...baseLayout });
 
         plansData.push(pObj);
-        saveDataToLocal();
+        syncData();
         document.getElementById('planTitle').value = ''; closeModals();
         renderBoard(); 
     }
@@ -982,10 +1081,14 @@
             }
         }
         
-        saveDataToLocal();
+        syncData();
         document.getElementById('goalTitle').value = ''; closeModals();
         renderBoard(); 
     }
+
+    // 页面启动时优先拉取 Supabase 云端最新数据
+    updateWeekView();
+    syncData(true);
 </script>
 </body>
 </html>
