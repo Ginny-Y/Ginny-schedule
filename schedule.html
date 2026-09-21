@@ -430,28 +430,29 @@
             localStorage.setItem('myPlan_completion', JSON.stringify(completionData));
         }
 
-        if (supabaseClient) {
-            try {
-                if (isInitialFetch) {
-                    const { data, error } = await supabaseClient
-                        .from('schedule_data')
-                        .select('*')
-                        .eq('id', 'user_default')
-                        .single();
-                    if (data && !error) {
-                        plansData = data.plans || [];
-                        goalsData = data.goals || [];
-                        completionData = data.completion || {};
-                        localStorage.setItem('myPlan_plans', JSON.stringify(plansData));
-                        localStorage.setItem('myPlan_goals', JSON.stringify(goalsData));
-                        localStorage.setItem('myPlan_completion', JSON.stringify(completionData));
-                        renderBoard();
-                    }
+// 优先从网址参数读取（例如 ?user=andy），没有则读取本地缓存
+    const urlParams = new URLSearchParams(window.location.search);
+    let currentUserId = urlParams.get('user') || localStorage.getItem('myPlan_currentUser');
+
+    // 首次打开且未带参数时，提示输入代号/名字
+    if (!currentUserId) {
+        currentUserId = prompt('请输入您的专属昵称/代号（手机和电脑输入相同代号即可同步）：') || 'default_user';
+        localStorage.setItem('myPlan_currentUser', currentUserId);
+    }
+
+    if (supabaseClient) {
+        try {
+            if (isInitialFetch) {
+                const { data, error } = await supabaseClient
+                    .from('schedule_data')
+                    .select('*')
+                    .eq('id', currentUserId)
+                    .single();
                 } else {
                     await supabaseClient
                         .from('schedule_data')
                         .upsert({
-                            id: 'user_default',
+                            id: currentUserId,
                             plans: plansData,
                             goals: goalsData,
                             completion: completionData,
