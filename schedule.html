@@ -48,7 +48,24 @@
             box-shadow: 0 2px 8px rgba(0, 122, 255, 0.3);
         }
 
-        /* 三条杠汉堡菜单按钮样式 */
+        /* 顶部小图标/功能按钮 */
+        .icon-btn {
+            width: 38px; height: 38px; border-radius: 50%; padding: 0;
+            justify-content: center; border: 1px solid var(--border-color);
+            background: var(--card-bg); cursor: pointer; display: flex;
+            align-items: center; transition: all 0.2s; font-size: 15px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.02); color: var(--text-main);
+        }
+        .icon-btn:hover { background: #F5F5F7; }
+
+        .btn-today {
+            background-color: var(--card-bg); color: var(--accent-blue); border: 1px solid var(--border-color);
+            padding: 8px 12px; border-radius: 19px; font-size: 13px; font-weight: 600;
+            cursor: pointer; box-shadow: 0 2px 4px rgba(0,0,0,0.02); transition: all 0.2s;
+        }
+        .btn-today:hover { background-color: #E8F2FF; }
+
+        /* 汉堡菜单按钮样式 */
         .menu-btn {
             width: 38px; height: 38px; border-radius: 50%; padding: 0;
             justify-content: center; border: 1px solid var(--border-color);
@@ -82,9 +99,12 @@
         }
         .nav-btn:hover { background: var(--accent-blue); color: white; }
         .list-selection { display: none; }
-        .list-selection.active { display: block; }
-        .list-item { padding: 8px; font-size: 13px; cursor: pointer; border-radius: 8px; margin-bottom: 4px; }
-        .list-item:hover { background: rgba(0,0,0,0.05); }
+        .list-selection.active { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+        .list-item { 
+            padding: 10px 0; text-align: center; background: #F5F5F7; border-radius: 8px; 
+            font-size: 13px; font-weight: 500; cursor: pointer; transition: 0.2s; 
+        }
+        .list-item:hover { background: var(--accent-blue); color: white; }
         .nav-back { font-size: 12px; color: var(--accent-blue); cursor: pointer; margin-bottom: 12px; display: inline-block; font-weight: 500;}
 
         /* 主体布局与自适应 */
@@ -101,8 +121,8 @@
             border-bottom: 1px solid var(--border-color); font-size: 13px;
             position: relative; min-height: 56px; 
         }
-        .cell.drag-over { background-color: rgba(0, 122, 255, 0.1); }
         .cell.header-cell { font-weight: 600; background-color: #FAFAFA; color: var(--text-secondary); padding: 10px 4px; line-height: 1.4;}
+        .cell.header-cell.today-col { background-color: #EBF3FF; color: var(--accent-blue); }
         .date-sub { font-size: 11px; font-weight: normal; opacity: 0.8; }
         
         .cell.allday-cell { background-color: #FDFDFD; min-height: 48px; border-bottom: 2px solid var(--border-color); display: flex; flex-direction: column; gap: 4px; padding: 4px;}
@@ -117,14 +137,38 @@
         .plan-card {
             border-radius: 6px; padding: 4px 6px; font-size: 12px; font-weight: 500;
             text-align: left; box-shadow: 0 2px 4px rgba(0,0,0,0.06); cursor: pointer;
-            user-select: none; overflow: hidden; transition: opacity 0.3s;
+            user-select: none; overflow: hidden; transition: opacity 0.3s, transform 0.2s;
             position: absolute; left: 2px; right: 2px; z-index: 10;
+            box-sizing: border-box;
         }
+        /* 针对30分钟极短计划进行排版优化，保证文字上下完全可见 */
+        .plan-card.compact-card {
+            padding: 1px 6px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            line-height: 1.1;
+        }
+        .plan-card.compact-card .time-label {
+            margin-bottom: 0;
+            font-size: 9px;
+            flex-shrink: 0;
+            line-height: 1;
+        }
+        .plan-card.compact-card .card-text-title {
+            font-size: 11px;
+            line-height: 1.1;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
         .plan-card.allday-card { position: relative; left: auto; right: auto; height: auto !important; margin-bottom: 2px; }
         .time-label { font-size: 10px; opacity: 0.8; margin-bottom: 2px; display: block; }
         .completed { background-color: #E5E5EA !important; color: #8E8E93 !important; text-decoration: line-through; box-shadow: none; }
+        .search-highlight { outline: 3px solid #FF9500; transform: scale(1.03); z-index: 99; }
 
-        /* 侧边进度条与手机端顶部平铺适配 */
+        /* 侧边进度条 */
         .progress-section {
             width: 280px; background: var(--card-bg); border-radius: var(--radius-lg);
             padding: 16px; box-shadow: var(--shadow); flex-shrink: 0;
@@ -137,9 +181,13 @@
         .progress-item:hover { background: #FAFAFA; }
         .progress-header { display: flex; justify-content: space-between; font-size: 12px; font-weight: 500; margin-bottom: 6px; }
         .progress-bar { display: flex; gap: 3px; height: 10px; border-radius: 5px; overflow: hidden; background: #F5F5F7;}
-        .progress-segment { flex: 1; height: 100%; transition: background-color 0.3s; }
-        .progress-segment.done { background-color: #E5E5EA !important; }
-        .progress-segment.missed { background-color: #FF3B30 !important; } 
+        
+        /* 学习进度条：打卡前无色透明带细边框，打卡后展示颜色 */
+        .progress-segment { 
+            flex: 1; height: 100%; transition: all 0.3s;
+            background-color: transparent; border: 1px solid rgba(0,0,0,0.12); box-sizing: border-box; border-radius: 2px;
+        }
+        .progress-segment.done { border-color: transparent !important; }
         .progress-fill { height: 100%; transition: width 0.3s ease; border-radius: 5px;}
 
         /* 手机端响应式专属排版 */
@@ -192,6 +240,19 @@
         .btn-save { background-color: var(--accent-blue); color: white; }
 
         /* 完成记录与圆饼统计图专用样式 */
+        .filter-date-box {
+            display: flex; gap: 8px; align-items: center; margin-bottom: 14px; background: #F8F9FA;
+            padding: 10px 12px; border-radius: 10px; border: 1px solid var(--border-color); flex-wrap: wrap;
+        }
+        .filter-date-box label { font-size: 12px; color: var(--text-secondary); font-weight: 500; }
+        .filter-date-box input[type="date"] {
+            padding: 5px 8px; font-size: 12px; border: 1px solid var(--border-color); border-radius: 6px; outline: none; background: white;
+        }
+        .filter-btn-reset {
+            background: #E5E5EA; border: none; border-radius: 6px; padding: 5px 10px;
+            font-size: 12px; cursor: pointer; color: var(--text-main); margin-left: auto;
+        }
+
         .stats-summary-card {
             display: flex; justify-content: space-around; background: #F8F9FA;
             padding: 14px; border-radius: 12px; margin-bottom: 16px; text-align: center;
@@ -200,13 +261,13 @@
         .stat-lbl { font-size: 12px; color: var(--text-secondary); margin-top: 4px; }
         
         .chart-box {
-            display: flex; align-items: center; justify-content: center; gap: 24px;
+            display: flex; align-items: center; justify-content: center; gap: 20px;
             padding: 10px 0 20px 0; border-bottom: 1px solid var(--border-color);
         }
         .pie-chart {
             width: 130px; height: 130px; border-radius: 50%;
             display: flex; justify-content: center; align-items: center; position: relative;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.06); flex-shrink: 0;
         }
         .pie-hole {
             width: 76px; height: 76px; background: white; border-radius: 50%;
@@ -214,9 +275,11 @@
             font-size: 11px; color: var(--text-secondary); font-weight: 600;
         }
         .pie-hole span { font-size: 15px; color: var(--text-main); font-weight: 700; }
-        .pie-legend-list { display: flex; flex-direction: column; gap: 6px; max-height: 140px; overflow-y: auto; padding-right: 4px;}
+        .pie-legend-list { display: flex; flex-direction: column; gap: 8px; max-height: 150px; overflow-y: auto; padding-right: 4px; flex: 1; }
         .pie-legend-item { display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--text-main); }
         .legend-color-box { width: 12px; height: 12px; border-radius: 3px; flex-shrink: 0; }
+        .legend-name { font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 130px; }
+        .legend-stats { color: var(--text-secondary); font-size: 11px; margin-left: auto; }
 
         .completed-list-box { margin-top: 14px; max-height: 240px; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; }
         .completed-task-item {
@@ -224,6 +287,14 @@
             padding: 9px 12px; background: #F8F9FA; border-radius: 8px; font-size: 13px;
         }
         .completed-tag { font-size: 11px; padding: 2px 8px; border-radius: 4px; color: white; }
+
+        /* 搜索弹窗样式 */
+        .search-results-list { max-height: 320px; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; margin-top: 12px; }
+        .search-result-item {
+            padding: 10px 14px; background: #F8F9FA; border-radius: 8px; cursor: pointer;
+            display: flex; justify-content: space-between; align-items: center; font-size: 13px; transition: 0.15s;
+        }
+        .search-result-item:hover { background: #EBF3FF; }
     </style>
 </head>
 <body>
@@ -241,6 +312,12 @@
         </div>
         
         <div class="header-right">
+            <!-- “今天”功能键 -->
+            <button class="btn-today" onclick="goToToday()" title="回到包含今天的这一周">今天</button>
+
+            <!-- 搜索功能（放大镜icon） -->
+            <button class="icon-btn" onclick="openSearchModal()" title="搜索计划或目标">🔍</button>
+
             <!-- 三条杠菜单键 -->
             <div class="dropdown">
                 <button class="menu-btn" onclick="toggleDropdown(event, 'mainMenuDropdown')" title="更多功能">
@@ -258,19 +335,21 @@
                     </div>
                 </div>
 
-                <!-- 查看周计划多级日期面板 -->
+                <!-- 查看周计划多级日期面板（中文简写展示） -->
                 <div class="dropdown-content calendar-panel" id="calendarDropdown" onclick="event.stopPropagation()">
                     <div class="grid-selection active" id="yearSelection">
                         <script>for(let y=2026; y<=2036; y++) document.write(`<div class="nav-btn" onclick="showMonths(${y})">${y}</div>`);</script>
                     </div>
                     <div class="grid-selection" id="monthSelection">
                         <div style="grid-column: 1 / -1;"><span class="nav-back" onclick="showCalendarLevel('years')">← 返回年份</span></div>
-                        <script>for(let m=1; m<=12; m++) document.write(`<div class="nav-btn" onclick="showWeeks(${m})">${m}月</div>`);</script>
+                        <script>
+                            for(let m=1; m<=12; m++) document.write(`<div class="nav-btn" onclick="showWeeks(${m})">${m}月</div>`);
+                        </script>
                     </div>
                     <div class="list-selection" id="weekSelection">
-                        <span class="nav-back" onclick="showCalendarLevel('months')">← 返回月份</span>
-                        <div class="menu-title" id="selectedMonthTitle" style="color: var(--accent-blue); border-bottom: 1px solid #eee; padding-bottom: 8px;"></div>
-                        <div id="weekListContainer"></div>
+                        <div style="grid-column: 1 / -1;"><span class="nav-back" onclick="showCalendarLevel('months')">← 返回月份</span></div>
+                        <div class="menu-title" id="selectedMonthTitle" style="grid-column: 1 / -1; color: var(--accent-blue); border-bottom: 1px solid #eee; padding-bottom: 8px;"></div>
+                        <div id="weekListContainer" style="display: contents;"></div>
                     </div>
                 </div>
             </div>
@@ -318,6 +397,22 @@
     </div>
 </div>
 
+<!-- 搜索功能弹窗 -->
+<div class="modal-overlay" id="searchModalOverlay">
+    <div class="modal">
+        <h2>🔍 搜索计划与目标</h2>
+        <div class="form-group">
+            <input type="text" id="searchInput" placeholder="输入名称关键字搜索..." oninput="executeSearch()">
+        </div>
+        <div class="search-results-list" id="searchResultsList">
+            <div style="color:var(--text-secondary); text-align:center; padding:20px 0; font-size:13px;">请输入关键字进行搜索</div>
+        </div>
+        <div class="modal-actions">
+            <button class="btn-cancel" onclick="closeSearchModal()">关闭</button>
+        </div>
+    </div>
+</div>
+
 <!-- 双击操作弹窗：编辑 / 删除单次 / 删除所有关联事件 -->
 <div class="modal-overlay" id="actionModalOverlay">
     <div class="modal" style="width: 320px; text-align: center; padding: 24px;">
@@ -334,9 +429,17 @@
 
 <!-- 已完成记录与统计圆饼图弹窗 -->
 <div class="modal-overlay" id="completedRecordsModal">
-    <div class="modal" style="max-width: 480px;">
+    <div class="modal" style="max-width: 520px;">
         <h2>📊 已完成记录与统计</h2>
         
+        <div class="filter-date-box">
+            <label>从</label>
+            <input type="date" id="filterStartDate" onchange="renderCompletedStats()">
+            <label>至</label>
+            <input type="date" id="filterEndDate" onchange="renderCompletedStats()">
+            <button class="filter-btn-reset" onclick="resetDateFilter()">全部</button>
+        </div>
+
         <div class="stats-summary-card">
             <div>
                 <div class="stat-val" id="totalFinishedCount">0</div>
@@ -352,7 +455,7 @@
             <div class="pie-chart" id="recordsPieChart">
                 <div class="pie-hole">
                     <span>完成占比</span>
-                    <div id="pieCenterSubtitle" style="font-size: 11px; margin-top:2px;">颜色分类</div>
+                    <div id="pieCenterSubtitle" style="font-size: 11px; margin-top:2px;">分类占比</div>
                 </div>
             </div>
             <div class="pie-legend-list" id="recordsPieLegend"></div>
@@ -398,10 +501,18 @@
                 <label class="day-cb-label"><input type="checkbox" name="planDays" value="7"> 日</label>
             </div>
         </div>
-        <div style="display: flex; gap: 10px;">
-            <div class="form-group" style="flex: 1;"><label>开始时间</label><select id="planStartTime"></select></div>
-            <div class="form-group" style="flex: 1;"><label>结束时间</label><select id="planEndTime"></select></div>
+
+        <!-- 时间设置选项：默认无时间（全天任务），勾选后展现时间段选择 -->
+        <div class="form-group">
+            <label class="day-cb-label" style="font-weight: 500; margin-bottom: 6px;">
+                <input type="checkbox" id="hasTimeCheckbox" onchange="toggleTimePicker()"> 指定具体时间 (未勾选则为全天任务)
+            </label>
+            <div id="timeSelectWrapper" style="display: none; gap: 10px; margin-top: 6px;">
+                <div style="flex: 1;"><label style="font-size:12px;">开始时间</label><select id="planStartTime"></select></div>
+                <div style="flex: 1;"><label style="font-size:12px;">结束时间</label><select id="planEndTime"></select></div>
+            </div>
         </div>
+
         <div class="form-group">
             <label>颜色标签</label>
             <div class="color-options plan-colors">
@@ -441,6 +552,8 @@
                 <div style="flex: 1;"><label>结束日期 (选填)</label><input type="date" id="goalEndDate"></div>
             </div>
         </div>
+
+        <!-- 减肥专属字段 -->
         <div id="weightLossFields" style="display: none; background: #FAFAFA; padding: 12px; border-radius: 8px; margin-bottom: 16px;">
             <div style="display: flex; gap: 10px;">
                 <div class="form-group" style="flex: 1;"><label>当前体重(kg)</label><input type="number" id="initWeight"></div>
@@ -451,33 +564,33 @@
             </div>
             <div class="form-group"><label>每周期 Check 次数</label><input type="number" id="weightCheckCount" value="3" min="1" max="10"></div>
         </div>
+
+        <!-- 学习目标专属频次与周期设置 -->
+        <div id="learningGoalFreqFields" style="display: none; background: #FAFAFA; padding: 12px; border-radius: 8px; margin-bottom: 16px;">
+            <div class="form-group"><label>Check 频次 (周/月/年)</label>
+                <select id="learningFreq"><option value="week">每周</option><option value="month">每月</option><option value="year">每年</option></select>
+            </div>
+            <div class="form-group"><label>每周期 Check 次数</label><input type="number" id="learningCheckCount" value="3" min="1" max="10"></div>
+        </div>
+
+        <!-- 攒钱专属字段 -->
         <div id="savingFields" style="display: none; background: #FFF9E6; padding: 12px; border-radius: 8px; margin-bottom: 16px;">
             <div class="form-group"><label>目标金额 (元)</label><input type="number" id="targetAmount" placeholder="例如: 5000"></div>
         </div>
-        <div id="learningOtherFields" style="display: none;">
-            <div class="form-group">
-                <label>事件类型</label>
+
+        <!-- 其他类型专属字段：去除多个事件，保留单独事件，增加频次与次数 -->
+        <div id="otherGoalFields" style="display: none; background: #FAFAFA; padding: 12px; border-radius: 8px; margin-bottom: 16px;">
+            <div class="form-group"><label>事件类型</label>
                 <div class="radio-group">
-                    <label class="day-cb-label"><input type="radio" name="isGoalRepeat" value="no" checked onchange="toggleGoalRepeat()"> 单独事件</label>
-                    <label class="day-cb-label"><input type="radio" name="isGoalRepeat" value="yes" onchange="toggleGoalRepeat()"> 多个事件</label>
+                    <label class="day-cb-label"><input type="radio" name="isOtherGoalRepeat" value="no" checked disabled> 单独事件</label>
                 </div>
             </div>
-            <div class="form-group" id="goalRepeatDaysWrapper" style="display: none;">
-                <label>分配星期 (多选)</label>
-                <div class="checkbox-group">
-                    <label class="day-cb-label"><input type="checkbox" name="goalDays" value="1"> 一</label>
-                    <label class="day-cb-label"><input type="checkbox" name="goalDays" value="2"> 二</label>
-                    <label class="day-cb-label"><input type="checkbox" name="goalDays" value="3"> 三</label>
-                    <label class="day-cb-label"><input type="checkbox" name="goalDays" value="4"> 四</label>
-                    <label class="day-cb-label"><input type="checkbox" name="goalDays" value="5"> 五</label>
-                    <label class="day-cb-label"><input type="checkbox" name="goalDays" value="6"> 六</label>
-                    <label class="day-cb-label"><input type="checkbox" name="goalDays" value="7"> 日</label>
-                </div>
+            <div class="form-group"><label>Check 频次 (周/月/年)</label>
+                <select id="otherGoalFreq"><option value="week">每周</option><option value="month">每月</option><option value="year">每年</option></select>
             </div>
-            <div class="form-group" id="otherGoalCountWrapper" style="display: none;">
-                <label>每天需要完成几次？</label><input type="number" id="otherGoalCount" value="1" min="1">
-            </div>
+            <div class="form-group"><label>每周期 Check 次数</label><input type="number" id="otherGoalCheckCount" value="1" min="1" max="10"></div>
         </div>
+
         <div class="form-group"><label>颜色标签</label>
             <div class="color-options goal-colors">
                 <div class="color-dot selected" data-bg="#3C5954" data-text="#FFFFFF" style="background-color: #3C5954;"></div>
@@ -535,7 +648,6 @@
             localStorage.setItem(compKey, JSON.stringify(completionData));
         }
 
-        // 与 Supabase 云端同步
         if (supabaseClient) {
             try {
                 if (isInitialFetch) {
@@ -607,10 +719,19 @@
     function toLocalISOString(date) { return date.getFullYear() + '-' + String(date.getMonth() + 1).padStart(2, '0') + '-' + String(date.getDate()).padStart(2, '0'); }
 
     function updateWeekView() {
+        const todayStr = toLocalISOString(new Date());
         for(let i=0; i<7; i++) {
             let d = new Date(activeMonday);
             d.setDate(activeMonday.getDate() + i);
-            document.querySelector(`#h-day-${i+1} .date-sub`).innerText = `${d.getMonth()+1}/${d.getDate()}`;
+            const dateISO = toLocalISOString(d);
+            const colHeader = document.querySelector(`#h-day-${i+1}`);
+            colHeader.querySelector('.date-sub').innerText = `${d.getMonth()+1}/${d.getDate()}`;
+            
+            if (dateISO === todayStr) {
+                colHeader.classList.add('today-col');
+            } else {
+                colHeader.classList.remove('today-col');
+            }
         }
         document.getElementById('pageTitle').innerText = `本周计划 (${activeMonday.getFullYear()}年)`;
         renderBoard(); 
@@ -618,6 +739,11 @@
 
     function goToPrevWeek() { activeMonday.setDate(activeMonday.getDate() - 7); updateWeekView(); }
     function goToNextWeek() { activeMonday.setDate(activeMonday.getDate() + 7); updateWeekView(); }
+    
+    function goToToday() {
+        activeMonday = getMonday(new Date());
+        updateWeekView();
+    }
 
     window.onclick = function(event) { 
         if (!event.target.closest('.dropdown')) {
@@ -637,7 +763,6 @@
         document.querySelectorAll('.dropdown-content').forEach(d => d.classList.remove('show')); 
     }
 
-    // 从三条杠菜单打开日历选择器
     function openCalendarPicker(e) {
         e.stopPropagation();
         closeDropdowns();
@@ -660,8 +785,10 @@
         const firstDay = new Date(selYear, selMonth - 1, 1).getDay() || 7;
         const totalDays = new Date(selYear, selMonth, 0).getDate();
         const weeksCount = Math.ceil((totalDays + firstDay - 1) / 7);
-        let html = ''; const weekNames = ['一', '二', '三', '四', '五', '六'];
-        for(let i = 1; i <= weeksCount; i++) { html += `<div class="list-item" onclick="changeWeekData(${i})">第${weekNames[i-1]}周</div>`; }
+        let html = '';
+        for(let i = 1; i <= weeksCount; i++) { 
+            html += `<div class="list-item" onclick="changeWeekData(${i})">第${i}周</div>`; 
+        }
         document.getElementById('weekListContainer').innerHTML = html;
         showCalendarLevel('weeks');
     }
@@ -673,10 +800,97 @@
         updateWeekView(); closeDropdowns(); 
     }
 
+    // ================== 搜索计划与目标逻辑 ==================
+    function openSearchModal() {
+        document.getElementById('searchInput').value = '';
+        document.getElementById('searchResultsList').innerHTML = '<div style="color:var(--text-secondary); text-align:center; padding:20px 0; font-size:13px;">请输入关键字进行搜索</div>';
+        document.getElementById('searchModalOverlay').style.display = 'flex';
+        setTimeout(() => document.getElementById('searchInput').focus(), 100);
+    }
+
+    function closeSearchModal() {
+        document.getElementById('searchModalOverlay').style.display = 'none';
+    }
+
+    function executeSearch() {
+        const query = document.getElementById('searchInput').value.trim().toLowerCase();
+        const container = document.getElementById('searchResultsList');
+        if (!query) {
+            container.innerHTML = '<div style="color:var(--text-secondary); text-align:center; padding:20px 0; font-size:13px;">请输入关键字进行搜索</div>';
+            return;
+        }
+
+        let results = [];
+
+        plansData.forEach(p => {
+            if (p.title && p.title.toLowerCase().includes(query)) {
+                results.push({
+                    type: '计划',
+                    title: p.title,
+                    date: p.startDate || '',
+                    rawObj: p
+                });
+            }
+        });
+
+        goalsData.forEach(g => {
+            if (g.title && g.title.toLowerCase().includes(query)) {
+                results.push({
+                    type: '目标',
+                    title: g.title,
+                    date: g.startDate || '',
+                    rawObj: g
+                });
+            }
+        });
+
+        if (results.length === 0) {
+            container.innerHTML = '<div style="color:var(--text-secondary); text-align:center; padding:20px 0; font-size:13px;">未找到匹配的计划或目标</div>';
+            return;
+        }
+
+        container.innerHTML = '';
+        results.forEach(res => {
+            const itemDiv = document.createElement('div');
+            itemDiv.className = 'search-result-item';
+            itemDiv.innerHTML = `
+                <div>
+                    <span style="font-weight:600;">[${res.type}]</span> ${escapeHtml(res.title)}
+                    <div style="font-size:11px; color:var(--text-secondary); margin-top:2px;">${res.date ? '日期: ' + res.date : '周期目标'}</div>
+                </div>
+                <span style="color:var(--accent-blue); font-size:12px;">定位 →</span>
+            `;
+            itemDiv.onclick = () => jumpToResult(res);
+            container.appendChild(itemDiv);
+        });
+    }
+
+    function jumpToResult(res) {
+        closeSearchModal();
+        let targetDate = res.date ? new Date(res.date + "T00:00:00") : new Date();
+        activeMonday = getMonday(targetDate);
+        updateWeekView();
+
+        setTimeout(() => {
+            const targetEl = document.querySelector(`[data-obj-id="${res.rawObj.id}"]`);
+            if (targetEl) {
+                targetEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                targetEl.classList.add('search-highlight');
+                setTimeout(() => targetEl.classList.remove('search-highlight'), 2500);
+            }
+        }, 300);
+    }
+
+    // ================== 时间设置开关逻辑 ==================
+    function toggleTimePicker() {
+        const isChecked = document.getElementById('hasTimeCheckbox').checked;
+        document.getElementById('timeSelectWrapper').style.display = isChecked ? 'flex' : 'none';
+    }
+
     // ================== 双击操作弹窗逻辑 ==================
     let activeActionObjId = null;
     let activeActionSubKey = null;
-    let activeActionType = null; // 'plan' | 'goal'
+    let activeActionType = null;
 
     function openActionModal(objId, subKey, type, title) {
         activeActionObjId = objId;
@@ -721,12 +935,8 @@
             if (g) {
                 if (!g.deletedKeys) g.deletedKeys = [];
                 g.deletedKeys.push(compKey);
-                if (g.type === 'normal' || g.type === 'learning') {
-                    g.total = Math.max(0, g.total - 1);
-                    if (completionData[compKey]) {
-                        g.completed = Math.max(0, g.completed - 1);
-                        delete completionData[compKey];
-                    }
+                if (completionData[compKey]) {
+                    delete completionData[compKey];
                 }
             }
         }
@@ -735,44 +945,76 @@
         renderBoard();
     }
 
-    // ================== 已完成记录与圆饼图统计逻辑 ==================
+    // ================== 已完成记录、区间筛选与圆饼图统计逻辑 ==================
     function openCompletedRecordsModal() {
+        document.getElementById('filterStartDate').value = '';
+        document.getElementById('filterEndDate').value = '';
+        renderCompletedStats();
+        document.getElementById('completedRecordsModal').style.display = 'flex';
+    }
+
+    function resetDateFilter() {
+        document.getElementById('filterStartDate').value = '';
+        document.getElementById('filterEndDate').value = '';
+        renderCompletedStats();
+    }
+
+    function renderCompletedStats() {
         const listContainer = document.getElementById('completedTasksList');
         const legendContainer = document.getElementById('recordsPieLegend');
         const pieChart = document.getElementById('recordsPieChart');
         listContainer.innerHTML = '';
         legendContainer.innerHTML = '';
 
+        const sFilter = document.getElementById('filterStartDate').value;
+        const eFilter = document.getElementById('filterEndDate').value;
+
         let finishedItems = [];
-        let colorCountMap = {};
+        let nameStatMap = {}; 
 
         Object.keys(completionData).forEach(compKey => {
             if (completionData[compKey]) {
+                const parts = compKey.split('_'); 
+                let itemDate = null;
+                if (parts[0] && parts[0].includes('-')) {
+                    const dParts = parts[0].split('-');
+                    itemDate = new Date(parseInt(dParts[0]), parseInt(dParts[1]) - 1, parseInt(dParts[2]));
+                }
+
+                if (itemDate) {
+                    if (sFilter && itemDate < new Date(sFilter + "T00:00:00")) return;
+                    if (eFilter && itemDate > new Date(eFilter + "T23:59:59")) return;
+                }
+
                 const plan = plansData.find(p => compKey.includes(p.id));
                 if (plan) {
                     const bgColor = (plan.color && plan.color.bg) ? plan.color.bg : '#007AFF';
+                    const title = plan.title;
                     finishedItems.push({
-                        title: plan.title,
-                        subtitle: plan.subtitle || '计划任务',
+                        title: title,
+                        subtitle: plan.subtitle ? `计划 (${plan.subtitle})` : '全天计划',
                         color: bgColor,
                         textColor: (plan.color && plan.color.text) ? plan.color.text : '#fff',
                         type: '计划'
                     });
-                    colorCountMap[bgColor] = (colorCountMap[bgColor] || 0) + 1;
+                    if (!nameStatMap[title]) nameStatMap[title] = { count: 0, color: bgColor };
+                    nameStatMap[title].count++;
                     return;
                 }
 
                 const goal = goalsData.find(g => compKey.includes(g.id));
                 if (goal) {
                     const bgColor = (goal.color && goal.color.bg) ? goal.color.bg : '#FF9500';
+                    const cleanTitle = goal.title.replace(/^\[.*?\]\s*/, '');
                     finishedItems.push({
-                        title: goal.title,
-                        subtitle: goal.dateRangeStr || '目标Check',
+                        title: cleanTitle,
+                        subtitle: goal.dateRangeStr || '目标打卡',
                         color: bgColor,
                         textColor: (goal.color && goal.color.text) ? goal.color.text : '#fff',
                         type: '目标'
                     });
-                    colorCountMap[bgColor] = (colorCountMap[bgColor] || 0) + 1;
+                    if (!nameStatMap[cleanTitle]) nameStatMap[cleanTitle] = { count: 0, color: bgColor };
+                    nameStatMap[cleanTitle].count++;
                 }
             }
         });
@@ -780,14 +1022,16 @@
         goalsData.forEach(g => {
             if (g.type === 'saving' && g.saved >= g.targetAmount) {
                 const bgColor = (g.color && g.color.bg) ? g.color.bg : '#34C759';
+                const cleanTitle = g.title.replace(/^\[.*?\]\s*/, '');
                 finishedItems.push({
-                    title: g.title,
+                    title: cleanTitle,
                     subtitle: `达成: ${g.saved}元`,
                     color: bgColor,
                     textColor: '#fff',
                     type: '攒钱目标'
                 });
-                colorCountMap[bgColor] = (colorCountMap[bgColor] || 0) + 1;
+                if (!nameStatMap[cleanTitle]) nameStatMap[cleanTitle] = { count: 0, color: bgColor };
+                nameStatMap[cleanTitle].count++;
             }
         });
 
@@ -800,23 +1044,26 @@
 
         if (totalFinished === 0) {
             pieChart.style.background = '#E5E5EA';
-            legendContainer.innerHTML = '<div style="font-size:12px; color:var(--text-secondary);">暂无完成数据</div>';
-            listContainer.innerHTML = '<div style="color:var(--text-secondary);font-size:13px;text-align:center;padding:24px 0;">尚未有已完成的任务，快去打卡吧！</div>';
+            legendContainer.innerHTML = '<div style="font-size:12px; color:var(--text-secondary);">该区间暂无完成数据</div>';
+            listContainer.innerHTML = '<div style="color:var(--text-secondary);font-size:13px;text-align:center;padding:24px 0;">所选时间段暂无已完成打卡</div>';
         } else {
             let gradientParts = [];
             let currentAngle = 0;
 
-            Object.keys(colorCountMap).forEach(color => {
-                const count = colorCountMap[color];
+            Object.keys(nameStatMap).forEach(name => {
+                const itemData = nameStatMap[name];
+                const count = itemData.count;
+                const percent = Math.round((count / totalFinished) * 100);
                 const sliceAngle = (count / totalFinished) * 360;
-                gradientParts.push(`${color} ${currentAngle}deg ${currentAngle + sliceAngle}deg`);
+                gradientParts.push(`${itemData.color} ${currentAngle}deg ${currentAngle + sliceAngle}deg`);
                 currentAngle += sliceAngle;
 
                 const legendItem = document.createElement('div');
                 legendItem.className = 'pie-legend-item';
                 legendItem.innerHTML = `
-                    <span class="legend-color-box" style="background-color: ${color};"></span>
-                    <span>${count} 项 (${Math.round((count / totalFinished) * 100)}%)</span>
+                    <span class="legend-color-box" style="background-color: ${itemData.color};"></span>
+                    <span class="legend-name" title="${escapeHtml(name)}">${escapeHtml(name)}</span>
+                    <span class="legend-stats">${count}项 (${percent}%)</span>
                 `;
                 legendContainer.appendChild(legendItem);
             });
@@ -836,8 +1083,6 @@
                 listContainer.appendChild(itemDiv);
             });
         }
-
-        document.getElementById('completedRecordsModal').style.display = 'flex';
     }
 
     function closeCompletedRecordsModal() {
@@ -875,14 +1120,21 @@
                         let compKey = `${activeWeekKey}_${p.id}_${i}`;
                         if(p.deletedKeys && p.deletedKeys.includes(compKey)) continue;
 
-                        let l = (p.layouts && p.layouts[i]) ? p.layouts[i] : (p.baseLayout || (p.layouts ? Object.values(p.layouts)[0] : null)); 
-                        if (!l) continue;
-
-                        let cell = document.getElementById(`cell-${i}-${l.startH}:00`);
-                        if(cell) {
-                            let card = createCardDOM(p.title, p.subtitle, p.color, false, l, p.id, i);
-                            if(completionData[compKey]) card.classList.add('completed');
-                            cell.appendChild(card);
+                        if (p.hasTime && p.baseLayout) {
+                            let l = (p.layouts && p.layouts[i]) ? p.layouts[i] : p.baseLayout;
+                            let cell = document.getElementById(`cell-${i}-${l.startH}:00`);
+                            if(cell) {
+                                let card = createCardDOM(p.title, p.subtitle, p.color, false, l, p.id, i);
+                                if(completionData[compKey]) card.classList.add('completed');
+                                cell.appendChild(card);
+                            }
+                        } else {
+                            let cell = document.getElementById(`allday-${i}`);
+                            if(cell) {
+                                let card = createCardDOM(p.title, '全天计划', p.color, false, null, p.id, i);
+                                if(completionData[compKey]) card.classList.add('completed');
+                                cell.appendChild(card);
+                            }
                         }
                     }
                 }
@@ -903,7 +1155,6 @@
                 const block = document.createElement('div'); block.className = 'spanning-block';
                 block.dataset.objId = g.id; block.dataset.subKey = 'saving';
                 
-                // 双击调出操作菜单
                 block.addEventListener('dblclick', function(e) {
                     e.stopPropagation();
                     openActionModal(g.id, 'saving', 'goal', g.title);
@@ -923,7 +1174,7 @@
                 row.appendChild(block);
                 document.getElementById('spanningRowContainer').appendChild(row);
             }
-            else if(g.type === 'weight') {
+            else if(g.type === 'weight' || g.type === 'learning' || g.type === 'other_freq') {
                 const row = document.createElement('div'); row.className = 'spanning-row';
                 for(let i=1; i<=g.count; i++) {
                     let compKey = `${activeWeekKey}_${g.id}_${i}`; 
@@ -932,7 +1183,6 @@
                     const block = document.createElement('div'); block.className = 'spanning-block';
                     block.dataset.objId = g.id; block.dataset.subKey = i;
 
-                    // 双击调出操作菜单
                     block.addEventListener('dblclick', function(e) {
                         e.stopPropagation();
                         openActionModal(g.id, i, 'goal', g.title);
@@ -941,15 +1191,21 @@
                     block.style.backgroundColor = g.color.bg; block.style.color = g.color.text;
                     if(completionData[compKey]) block.classList.add('completed');
 
-                    block.innerHTML = `<span>${g.title} <br><small>(${g.freq}打卡 ${i}/${g.count}) ${g.dateRangeStr || ''}</small></span>`;
+                    let subInfo = `(${g.freq}打卡 ${i}/${g.count})`;
+                    if (g.type === 'learning') subInfo = `(${g.freq}学习 ${i}/${g.count})`;
+                    block.innerHTML = `<span>${g.title} <br><small>${subInfo} ${g.dateRangeStr || ''}</small></span>`;
                     block.addEventListener('click', function(e) {
                         e.stopPropagation();
                         if(completionData[compKey]) {
                             completionData[compKey] = false; this.classList.remove('completed');
                         } else {
-                            let w = prompt(`请输入当前体重 (kg)\n目标: ${g.target}kg`);
-                            if(w && !isNaN(w)) {
-                                g.current = parseFloat(w);
+                            if(g.type === 'weight') {
+                                let w = prompt(`请输入当前体重 (kg)\n目标: ${g.target}kg`);
+                                if(w && !isNaN(w)) {
+                                    g.current = parseFloat(w);
+                                    completionData[compKey] = true; this.classList.add('completed');
+                                }
+                            } else {
                                 completionData[compKey] = true; this.classList.add('completed');
                             }
                         }
@@ -959,33 +1215,6 @@
                 }
                 if (row.childNodes.length > 0) document.getElementById('spanningRowContainer').appendChild(row);
             }
-            else { 
-                for(let i=1; i<=7; i++) {
-                    let currentDay = new Date(activeMonday);
-                    currentDay.setDate(currentDay.getDate() + (i-1));
-                    
-                    if (!g.startDate || (currentDay >= gStart && currentDay <= gEnd)) {
-                        if (g.isRepeat === undefined || !g.isRepeat || (g.days && g.days.includes(String(i)))) {
-                            if(g.isRepeat !== undefined && !g.isRepeat && g.days && !g.days.includes(String(i))) continue;
-
-                            let cell = document.getElementById(`allday-${i}`);
-                            if(cell) {
-                                let dCount = g.dailyCount || 1;
-                                for(let k=0; k<dCount; k++) {
-                                    let subKey = `${i}_${k}`;
-                                    let compKey = `${activeWeekKey}_${g.id}_${subKey}`;
-                                    if(g.deletedKeys && g.deletedKeys.includes(compKey)) continue;
-
-                                    let subtitle = g.dateRangeStr ? `任务 (${g.dateRangeStr})` : '全天任务';
-                                    let card = createCardDOM(g.title, subtitle, g.color, true, null, g.id, subKey);
-                                    if(completionData[compKey]) card.classList.add('completed');
-                                    cell.appendChild(card);
-                                }
-                            }
-                        }
-                    }
-                }
-            }
         });
 
         renderProgressBars();
@@ -993,39 +1222,40 @@
 
     function createCardDOM(title, subtitle, color, isGoal, layoutData, objId, subKey) {
         const card = document.createElement('div');
-        card.className = layoutData ? 'plan-card' : 'plan-card allday-card';
-        card.style.backgroundColor = color.bg; card.style.color = color.text;
+        const isCompact = layoutData && (layoutData.duration <= 30);
+        
+        card.className = layoutData 
+            ? (isCompact ? 'plan-card compact-card' : 'plan-card') 
+            : 'plan-card allday-card';
+            
+        card.style.backgroundColor = color.bg; 
+        card.style.color = color.text;
+        
         if(layoutData) {
             card.style.cssText += layoutData.style;
-            card.dataset.startM = layoutData.startM; card.dataset.duration = layoutData.duration;
+            card.dataset.startM = layoutData.startM; 
+            card.dataset.duration = layoutData.duration;
         }
-        card.dataset.objId = objId; card.dataset.subKey = subKey; 
-        card.innerHTML = `<span class="time-label">${subtitle}</span>${title}`;
+        card.dataset.objId = objId; 
+        card.dataset.subKey = subKey; 
         
-        // 单击打卡完成
+        if (isCompact) {
+            // 30分钟极短计划采用单行紧凑横排，确保计划名称上下文字完整可见
+            card.innerHTML = `<span class="time-label">${subtitle}</span><span class="card-text-title">${escapeHtml(title)}</span>`;
+        } else {
+            card.innerHTML = `<span class="time-label">${subtitle}</span><div class="card-text-title">${escapeHtml(title)}</div>`;
+        }
+        
         card.addEventListener('click', function(e) {
             e.stopPropagation();
             let compKey = `${activeWeekKey}_${objId}_${subKey}`;
             let isComplete = completionData[compKey];
 
-            if(isGoal) {
-                let g = goalsData.find(x => x.id === objId);
-                if(g) {
-                    if(!isComplete) {
-                        completionData[compKey] = true; this.classList.add('completed'); g.completed++;
-                    } else {
-                        completionData[compKey] = false; this.classList.remove('completed'); g.completed--;
-                    }
-                    syncData(); renderProgressBars();
-                }
-            } else { 
-                completionData[compKey] = !isComplete;
-                this.classList.toggle('completed');
-                syncData();
-            }
+            completionData[compKey] = !isComplete;
+            this.classList.toggle('completed');
+            syncData();
         });
 
-        // 双击弹出操作模态框（编辑 / 删除单项 / 删除全部关联）
         card.addEventListener('dblclick', function(e) {
             e.stopPropagation();
             openActionModal(objId, subKey, isGoal ? 'goal' : 'plan', title);
@@ -1047,7 +1277,10 @@
             item.onclick = () => editGoalUI(goal.id);
 
             const header = document.createElement('div'); header.className = 'progress-header';
-            const titleDisplay = `<span>${goal.title} <small style="font-weight:normal;color:var(--text-secondary)">${goal.dateRangeStr || ''}</small></span>`;
+            
+            // 进度条只显示具体名称，去除开头的类型标签 [减肥]、[学习] 等
+            const cleanTitle = (goal.title || '').replace(/^\[.*?\]\s*/, '');
+            const titleDisplay = `<span>${cleanTitle} <small style="font-weight:normal;color:var(--text-secondary)">${goal.dateRangeStr || ''}</small></span>`;
             const bar = document.createElement('div'); bar.className = 'progress-bar';
             
             if (goal.type === 'weight') {
@@ -1064,22 +1297,21 @@
                 fill.style.backgroundColor = goal.color.bg; fill.style.width = `${progress}%`;
                 if(goal.saved >= goal.targetAmount) fill.style.backgroundColor = '#34C759';
                 bar.appendChild(fill);
-            } else if (goal.type === 'learning') {
-                header.innerHTML = `${titleDisplay} <span>${goal.completed}/${goal.total}</span>`;
-                const isMissed = goal.endDate && new Date() > new Date(goal.endDate + "T23:59:59") && goal.completed < goal.total;
-                for (let i = 0; i < goal.total; i++) {
-                    const seg = document.createElement('div');
-                    if(i < goal.completed) { seg.className = 'progress-segment done'; } 
-                    else if (isMissed) { seg.className = 'progress-segment missed'; } 
-                    else { seg.className = 'progress-segment'; seg.style.backgroundColor = goal.color.bg; }
-                    bar.appendChild(seg);
+            } else if (goal.type === 'learning' || goal.type === 'other_freq') {
+                let doneCount = 0;
+                for(let i=1; i<=goal.count; i++) {
+                    if (completionData[`${activeWeekKey}_${goal.id}_${i}`]) doneCount++;
                 }
-            } else {
-                header.innerHTML = `${titleDisplay} <span>${goal.completed}/${goal.total}</span>`;
-                for (let i = 0; i < goal.total; i++) {
+                header.innerHTML = `${titleDisplay} <span>${doneCount}/${goal.count}</span>`;
+                
+                for (let i = 0; i < goal.count; i++) {
                     const seg = document.createElement('div');
-                    seg.className = 'progress-segment' + (i < goal.completed ? ' done' : '');
-                    if(!(i < goal.completed)) seg.style.backgroundColor = goal.color.bg;
+                    seg.className = 'progress-segment' + (i < doneCount ? ' done' : '');
+                    if (i < doneCount) {
+                        seg.style.backgroundColor = goal.color.bg;
+                    } else {
+                        seg.style.backgroundColor = 'transparent';
+                    }
                     bar.appendChild(seg);
                 }
             }
@@ -1088,7 +1320,6 @@
         });
     }
 
-    // 编辑计划回显
     function editPlanUI(id) {
         const p = plansData.find(x => x.id === id);
         if (!p) return;
@@ -1105,6 +1336,10 @@
         document.querySelectorAll('input[name="planDays"]').forEach(cb => {
             cb.checked = p.days ? p.days.includes(cb.value) : false;
         });
+
+        const hasTime = !!p.hasTime;
+        document.getElementById('hasTimeCheckbox').checked = hasTime;
+        toggleTimePicker();
 
         if (p.subtitle && p.subtitle.includes('-')) {
             const parts = p.subtitle.split('-');
@@ -1126,16 +1361,30 @@
         if(!goal) return;
         document.getElementById('editGoalId').value = id;
         document.getElementById('goalModalTitle').innerText = "编辑目标";
-        document.getElementById('goalType').value = goal.type === 'weight'?'减肥':(goal.type==='saving'?'攒钱':(goal.type==='learning'?'学习':'其他'));
+        
+        let typeVal = '其他';
+        if(goal.type === 'weight') typeVal = '减肥';
+        else if(goal.type === 'saving') typeVal = '攒钱';
+        else if(goal.type === 'learning') typeVal = '学习';
+        
+        document.getElementById('goalType').value = typeVal;
         document.getElementById('goalType').disabled = true;
         handleGoalTypeChange();
-        document.getElementById('goalTitle').value = goal.title.replace(/\[.*?\] /, ''); 
+        
+        document.getElementById('goalTitle').value = goal.title.replace(/^\[.*?\]\s*/, ''); 
         document.getElementById('goalStartDate').value = goal.startDate || '';
         document.getElementById('goalEndDate').value = goal.endDate || '';
         if(goal.type === 'saving') document.getElementById('targetAmount').value = goal.targetAmount;
         if(goal.type === 'weight') {
             document.getElementById('initWeight').value = goal.init;
             document.getElementById('targetWeight').value = goal.target;
+            document.getElementById('weightCheckCount').value = goal.count || 3;
+        }
+        if(goal.type === 'learning') {
+            document.getElementById('learningCheckCount').value = goal.count || 3;
+        }
+        if(goal.type === 'other_freq') {
+            document.getElementById('otherGoalCheckCount').value = goal.count || 1;
         }
 
         const colorDots = document.querySelectorAll('.goal-colors .color-dot');
@@ -1156,6 +1405,10 @@
         document.querySelector('input[name="isPlanRepeat"][value="no"]').checked = true;
         togglePlanRepeat();
         document.querySelectorAll('input[name="planDays"]').forEach(cb => cb.checked = false);
+        
+        document.getElementById('hasTimeCheckbox').checked = false;
+        toggleTimePicker();
+
         document.getElementById('planStartTime').selectedIndex = 0;
         document.getElementById('planEndTime').selectedIndex = 0;
         resetColorPicker('.plan-colors .color-dot');
@@ -1173,9 +1426,6 @@
         document.getElementById('initWeight').value = '';
         document.getElementById('targetWeight').value = '';
         document.getElementById('targetAmount').value = '';
-        document.querySelector('input[name="isGoalRepeat"][value="no"]').checked = true;
-        toggleGoalRepeat();
-        document.querySelectorAll('input[name="goalDays"]').forEach(cb => cb.checked = false);
         resetColorPicker('.goal-colors .color-dot');
         handleGoalTypeChange(); 
         document.getElementById('goalModalOverlay').style.display = 'flex'; 
@@ -1198,21 +1448,13 @@
         const isRepeat = document.querySelector('input[name="isPlanRepeat"]:checked').value === 'yes';
         document.getElementById('planRepeatDaysWrapper').style.display = isRepeat ? 'block' : 'none';
     }
-    function toggleGoalRepeat() {
-        const isRepeat = document.querySelector('input[name="isGoalRepeat"]:checked').value === 'yes';
-        document.getElementById('goalRepeatDaysWrapper').style.display = isRepeat ? 'block' : 'none';
-    }
     
     function handleGoalTypeChange() {
         const type = document.getElementById('goalType').value;
         document.getElementById('weightLossFields').style.display = type === '减肥' ? 'block' : 'none';
+        document.getElementById('learningGoalFreqFields').style.display = type === '学习' ? 'block' : 'none';
         document.getElementById('savingFields').style.display = type === '攒钱' ? 'block' : 'none';
-        if(type === '学习' || type === '其他') {
-            document.getElementById('learningOtherFields').style.display = 'block';
-            document.getElementById('otherGoalCountWrapper').style.display = type === '其他' ? 'block' : 'none';
-        } else {
-            document.getElementById('learningOtherFields').style.display = 'none';
-        }
+        document.getElementById('otherGoalFields').style.display = type === '其他' ? 'block' : 'none';
     }
 
     function setupColorPicker(selector) {
@@ -1235,6 +1477,7 @@
         if (!title) return alert("请输入名称");
         const isRepeat = document.querySelector('input[name="isPlanRepeat"]:checked').value === 'yes';
         const editId = document.getElementById('editPlanId').value;
+        const hasTime = document.getElementById('hasTimeCheckbox').checked;
         
         let sDateInput = document.getElementById('planStartDate').value;
         let eDateInput = document.getElementById('planEndDate').value;
@@ -1256,10 +1499,16 @@
             days = [...new Set(days)]; 
         }
 
-        const s = document.getElementById('planStartTime').value, e = document.getElementById('planEndTime').value;
-        const [sH, sM] = s.split(':').map(Number), [eH, eM] = e.split(':').map(Number);
-        const dur = (eH*60+eM)-(sH*60+sM);
-        const baseLayout = { startH: sH, startM: sM, duration: dur, style: `top:${(sM/60)*100}%; height:calc(${(dur/60)*100}% - 4px);` };
+        let baseLayout = null;
+        let subtitle = '';
+
+        if (hasTime) {
+            const s = document.getElementById('planStartTime').value, e = document.getElementById('planEndTime').value;
+            const [sH, sM] = s.split(':').map(Number), [eH, eM] = e.split(':').map(Number);
+            const dur = (eH*60+eM)-(sH*60+sM);
+            baseLayout = { startH: sH, startM: sM, duration: dur, style: `top:${(sM/60)*100}%; height:calc(${(dur/60)*100}% - 4px);` };
+            subtitle = `${s}-${e}`;
+        }
 
         if (editId) {
             let pObj = plansData.find(x => x.id === editId);
@@ -1269,19 +1518,24 @@
                 pObj.days = days;
                 pObj.startDate = startDate;
                 pObj.endDate = endDate;
+                pObj.hasTime = hasTime;
                 pObj.color = getPlanColor();
-                pObj.subtitle = `${s}-${e}`;
+                pObj.subtitle = subtitle;
                 pObj.baseLayout = baseLayout;
                 pObj.layouts = {};
-                days.forEach(d => pObj.layouts[d] = { ...baseLayout });
+                if (hasTime && baseLayout) {
+                    days.forEach(d => pObj.layouts[d] = { ...baseLayout });
+                }
             }
         } else {
             let pObj = {
                 id: 'plan_' + Date.now(), title: title, isRepeat: isRepeat, days: days,
-                startDate: startDate, endDate: endDate,
-                color: getPlanColor(), subtitle: `${s}-${e}`, layouts: {}, baseLayout: baseLayout
+                startDate: startDate, endDate: endDate, hasTime: hasTime,
+                color: getPlanColor(), subtitle: subtitle, layouts: {}, baseLayout: baseLayout
             };
-            days.forEach(d => pObj.layouts[d] = { ...baseLayout });
+            if (hasTime && baseLayout) {
+                days.forEach(d => pObj.layouts[d] = { ...baseLayout });
+            }
             plansData.push(pObj);
         }
 
@@ -1307,9 +1561,8 @@
         let existingIdx = goalsData.findIndex(g => g.id === goalId);
         let gObj = existingIdx > -1 ? goalsData[existingIdx] : { id: goalId, type: '', color: colors, title: title };
         
-        let isRepeat = document.querySelector('input[name="isGoalRepeat"]:checked').value === 'yes';
         let startDate = sDateInput || todayStr;
-        let endDate = eDateInput || (isRepeat || type === '攒钱' || type === '减肥' ? '2100-12-31' : startDate);
+        let endDate = eDateInput || '2100-12-31';
         
         gObj.startDate = startDate; gObj.endDate = endDate;
         gObj.color = colors;
@@ -1327,43 +1580,31 @@
             gObj.type = 'saving'; gObj.targetAmount = targetAmt; gObj.saved = gObj.saved || 0;
             if(existingIdx === -1) goalsData.push(gObj);
         } 
-        else if (type === '学习' || type === '其他') {
-            let days = [];
-            if (isRepeat) {
-                days = Array.from(document.querySelectorAll(`input[name="goalDays"]:checked`)).map(c => c.value);
-                if (days.length === 0) return alert("请选择分配星期");
-            } else {
-                let tempD = new Date(startDate + "T00:00:00");
-                let endD = new Date(endDate + "T23:59:59");
-                while(tempD <= endD && days.length < 7) {
-                    days.push(String(tempD.getDay() || 7));
-                    tempD.setDate(tempD.getDate() + 1);
-                }
-                days = [...new Set(days)];
-            }
-            
-            gObj.type = type === '学习' ? 'learning' : 'normal'; 
-            gObj.isRepeat = isRepeat; gObj.days = days;
-            gObj.dailyCount = type === '学习' ? 1 : (parseInt(document.getElementById('otherGoalCount').value) || 1);
-            
-            if(existingIdx === -1) {
-                gObj.total = days.length * gObj.dailyCount; gObj.completed = 0;
-                goalsData.push(gObj);
-            }
+        else if (type === '学习') {
+            gObj.type = 'learning';
+            gObj.count = parseInt(document.getElementById('learningCheckCount').value) || 3;
+            gObj.freq = document.getElementById('learningFreq').options[document.getElementById('learningFreq').selectedIndex].text;
+            if(existingIdx === -1) goalsData.push(gObj);
         }
         else if (type === '减肥') {
+            gObj.type = 'weight'; 
+            gObj.count = parseInt(document.getElementById('weightCheckCount').value) || 1;
+            gObj.freq = document.getElementById('weightFreq').options[document.getElementById('weightFreq').selectedIndex].text;
             if(existingIdx === -1) {
-                gObj.type = 'weight'; 
-                gObj.count = parseInt(document.getElementById('weightCheckCount').value) || 1;
-                gObj.freq = document.getElementById('weightFreq').options[document.getElementById('weightFreq').selectedIndex].text;
-                gObj.init = parseFloat(document.getElementById('initWeight').value);
-                gObj.target = parseFloat(document.getElementById('targetWeight').value); 
+                gObj.init = parseFloat(document.getElementById('initWeight').value) || 0;
+                gObj.target = parseFloat(document.getElementById('targetWeight').value) || 0; 
                 gObj.current = gObj.init;
                 goalsData.push(gObj);
             } else {
                 gObj.init = parseFloat(document.getElementById('initWeight').value) || gObj.init;
                 gObj.target = parseFloat(document.getElementById('targetWeight').value) || gObj.target;
             }
+        }
+        else if (type === '其他') {
+            gObj.type = 'other_freq';
+            gObj.count = parseInt(document.getElementById('otherGoalCheckCount').value) || 1;
+            gObj.freq = document.getElementById('otherGoalFreq').options[document.getElementById('otherGoalFreq').selectedIndex].text;
+            if(existingIdx === -1) goalsData.push(gObj);
         }
         
         syncData();
