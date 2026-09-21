@@ -190,7 +190,7 @@
         .progress-segment.done { border-color: transparent !important; }
         .progress-fill { height: 100%; transition: width 0.3s ease; border-radius: 5px;}
 
-        /* 手机端响应式专属排版 */
+        /* 手机端响应式专属排版与吸顶/固定设置 */
         @media (max-width: 900px) {
             body { padding: 12px 6px; }
             .header { flex-direction: column; align-items: flex-start; gap: 12px; }
@@ -206,6 +206,35 @@
             }
             .progress-item {
                 min-width: 220px; flex-shrink: 0; background: #FAFAFA; margin-bottom: 0;
+            }
+
+            /* 手机端滚动视口 */
+            .timetable-scroll-box {
+                max-height: 75vh;
+                overflow: auto;
+                position: relative;
+            }
+
+            /* 1. 星期行固定（顶部吸顶） */
+            .cell.header-cell {
+                position: sticky;
+                top: 0;
+                z-index: 30;
+                box-shadow: 0 2px 4px rgba(0,0,0,0.04);
+            }
+
+            /* 2. 时间列固定（左侧吸顶） */
+            .cell.time-col {
+                position: sticky;
+                left: 0;
+                z-index: 20;
+                box-shadow: 2px 0 4px rgba(0,0,0,0.04);
+            }
+
+            /* 3. 左上角交叉单元格双向吸顶 */
+            .cell.header-cell:first-child {
+                left: 0;
+                z-index: 40;
             }
         }
 
@@ -372,7 +401,7 @@
             <div id="progressContainer"></div>
         </div>
 
-        <!-- 表格水平滚动容器 -->
+        <!-- 表格水平与纵向滚动容器 -->
         <div class="timetable-scroll-box">
             <div class="timetable" id="timetable">
                 <div class="cell header-cell">时间</div>
@@ -578,7 +607,7 @@
             <div class="form-group"><label>目标金额 (元)</label><input type="number" id="targetAmount" placeholder="例如: 5000"></div>
         </div>
 
-        <!-- 其他类型专属字段：去除多个事件，保留单独事件，增加频次与次数 -->
+        <!-- 其他类型专属字段 -->
         <div id="otherGoalFields" style="display: none; background: #FAFAFA; padding: 12px; border-radius: 8px; margin-bottom: 16px;">
             <div class="form-group"><label>事件类型</label>
                 <div class="radio-group">
@@ -1240,7 +1269,6 @@
         card.dataset.subKey = subKey; 
         
         if (isCompact) {
-            // 30分钟极短计划采用单行紧凑横排，确保计划名称上下文字完整可见
             card.innerHTML = `<span class="time-label">${subtitle}</span><span class="card-text-title">${escapeHtml(title)}</span>`;
         } else {
             card.innerHTML = `<span class="time-label">${subtitle}</span><div class="card-text-title">${escapeHtml(title)}</div>`;
@@ -1278,7 +1306,6 @@
 
             const header = document.createElement('div'); header.className = 'progress-header';
             
-            // 进度条只显示具体名称，去除开头的类型标签 [减肥]、[学习] 等
             const cleanTitle = (goal.title || '').replace(/^\[.*?\]\s*/, '');
             const titleDisplay = `<span>${cleanTitle} <small style="font-weight:normal;color:var(--text-secondary)">${goal.dateRangeStr || ''}</small></span>`;
             const bar = document.createElement('div'); bar.className = 'progress-bar';
