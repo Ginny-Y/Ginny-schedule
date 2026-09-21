@@ -107,25 +107,30 @@
         .list-item:hover { background: var(--accent-blue); color: white; }
         .nav-back { font-size: 12px; color: var(--accent-blue); cursor: pointer; margin-bottom: 12px; display: inline-block; font-weight: 500;}
 
-        /* 主体布局与自适应 */
-        .main-content { display: flex; gap: 20px; align-items: flex-start; }
+        /* 主体布局与自适应：缩紧留白 */
+        .main-content { display: flex; gap: 16px; align-items: flex-start; }
         .timetable-scroll-box { flex: 1; min-width: 0; width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; }
         .timetable {
             background: var(--card-bg); border-radius: var(--radius-lg); box-shadow: var(--shadow);
-            display: grid; grid-template-columns: 70px repeat(7, minmax(130px, 1fr)); border: 1px solid var(--border-color);
-            min-width: 980px;
+            display: grid; grid-template-columns: 60px repeat(7, minmax(110px, 1fr)); border: 1px solid var(--border-color);
+            min-width: 830px;
         }
 
         .cell {
             text-align: center; border-right: 1px solid var(--border-color);
             border-bottom: 1px solid var(--border-color); font-size: 13px;
-            position: relative; min-height: 56px; 
+            position: relative; min-height: 52px; 
         }
-        .cell.header-cell { font-weight: 600; background-color: #FAFAFA; color: var(--text-secondary); padding: 10px 4px; line-height: 1.4;}
+        /* 紧凑对齐的表头：消除多余上下留白，上下距离一致 */
+        .cell.header-cell { 
+            font-weight: 600; background-color: #FAFAFA; color: var(--text-secondary); 
+            padding: 6px 4px; line-height: 1.15;
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
+        }
         .cell.header-cell.today-col { background-color: #EBF3FF; color: var(--accent-blue); }
-        .date-sub { font-size: 11px; font-weight: normal; opacity: 0.8; }
+        .date-sub { font-size: 11px; font-weight: normal; opacity: 0.8; margin-top: 2px; line-height: 1.1; }
         
-        .cell.allday-cell { background-color: #FDFDFD; min-height: 48px; border-bottom: 2px solid var(--border-color); display: flex; flex-direction: column; gap: 4px; padding: 4px;}
+        .cell.allday-cell { background-color: #FDFDFD; min-height: 44px; border-bottom: 2px solid var(--border-color); display: flex; flex-direction: column; gap: 4px; padding: 4px;}
         .time-col { font-weight: 500; color: var(--text-secondary); background-color: #FAFAFA; font-size: 12px; display: flex; align-items: center; justify-content: center; }
 
         .spanning-row {
@@ -190,32 +195,48 @@
         .progress-segment.done { border-color: transparent !important; }
         .progress-fill { height: 100%; transition: width 0.3s ease; border-radius: 5px;}
 
-        /* 手机端响应式专属排版与吸顶/固定设置 */
+        /* 手机端响应式专属排版：缩紧时间列左右距离，吸顶固定 */
         @media (max-width: 900px) {
-            body { padding: 12px 6px; }
-            .header { flex-direction: column; align-items: flex-start; gap: 12px; }
+            body { padding: 8px 4px; }
+            .header { flex-direction: column; align-items: flex-start; gap: 10px; }
             .header-right { align-self: flex-end; }
             .main-content { flex-direction: column; }
             
             .progress-section {
                 width: 100%; min-height: auto; max-height: none; box-sizing: border-box;
-                margin-bottom: 14px; padding: 12px;
+                margin-bottom: 10px; padding: 10px;
             }
             #progressContainer {
-                display: flex; gap: 12px; overflow-x: auto; -webkit-overflow-scrolling: touch;
+                display: flex; gap: 10px; overflow-x: auto; -webkit-overflow-scrolling: touch;
             }
             .progress-item {
-                min-width: 220px; flex-shrink: 0; background: #FAFAFA; margin-bottom: 0;
+                min-width: 200px; flex-shrink: 0; background: #FAFAFA; margin-bottom: 0;
             }
 
-            /* 手机端滚动视口 */
+            /* 手机端表格网格：最左侧时间列缩短为48px，留出更多有效区域 */
+            .timetable {
+                grid-template-columns: 48px repeat(7, minmax(95px, 1fr));
+                min-width: 713px;
+            }
+
+            /* 手机端时间列压缩文字内边距与字号 */
+            .cell.time-col {
+                padding: 0 2px;
+                font-size: 11px;
+                position: sticky;
+                left: 0;
+                z-index: 20;
+                box-shadow: 2px 0 4px rgba(0,0,0,0.04);
+            }
+
+            /* 手机端滚动视口与吸顶 */
             .timetable-scroll-box {
                 max-height: 75vh;
                 overflow: auto;
                 position: relative;
             }
 
-            /* 1. 星期行固定（顶部吸顶） */
+            /* 星期行固定（顶部吸顶） */
             .cell.header-cell {
                 position: sticky;
                 top: 0;
@@ -223,15 +244,7 @@
                 box-shadow: 0 2px 4px rgba(0,0,0,0.04);
             }
 
-            /* 2. 时间列固定（左侧吸顶） */
-            .cell.time-col {
-                position: sticky;
-                left: 0;
-                z-index: 20;
-                box-shadow: 2px 0 4px rgba(0,0,0,0.04);
-            }
-
-            /* 3. 左上角交叉单元格双向吸顶 */
+            /* 左上角交叉单元格双向吸顶 */
             .cell.header-cell:first-child {
                 left: 0;
                 z-index: 40;
@@ -413,10 +426,12 @@
                 <div class="cell header-cell" id="h-day-6">周六<br><span class="date-sub"></span></div>
                 <div class="cell header-cell" id="h-day-7">周日<br><span class="date-sub"></span></div>
                 
-                <div class="cell time-col allday-cell" style="font-weight:bold;">周级目标</div>
+                <!-- 修改1：由 周级目标 改为 目标 -->
+                <div class="cell time-col allday-cell" style="font-weight:bold;">目标</div>
                 <div id="spanningRowContainer" style="grid-column: 2 / -1; display: flex; flex-direction: column;"></div>
 
-                <div class="cell time-col allday-cell" style="font-weight:bold;">全天任务</div>
+                <!-- 修改2：由 全天任务 改为 任务 -->
+                <div class="cell time-col allday-cell" style="font-weight:bold;">任务</div>
                 <div class="cell allday-cell drop-zone" id="allday-1"></div><div class="cell allday-cell drop-zone" id="allday-2"></div>
                 <div class="cell allday-cell drop-zone" id="allday-3"></div><div class="cell allday-cell drop-zone" id="allday-4"></div>
                 <div class="cell allday-cell drop-zone" id="allday-5"></div><div class="cell allday-cell drop-zone" id="allday-6"></div>
