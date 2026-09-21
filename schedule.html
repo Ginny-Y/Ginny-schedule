@@ -417,38 +417,75 @@
     }
 
     // 本地与云端数据状态
-    let plansData = JSON.parse(localStorage.getItem('myPlan_plans')) || [];
-    let goalsData = JSON.parse(localStorage.getItem('myPlan_goals')) || [];
-    let completionData = JSON.parse(localStorage.getItem('myPlan_completion')) || {}; 
-    let activeWeekKey = '';
-
-    // 双向同步：保存至 LocalStorage 并异步同步到 Supabase
+        let plansData = [];
+        let goalsData = [];
+        let completionData = {};
+        let activeWeekKey = '';
+// 双向同步：支持多人独立空间与自动合并
     async function syncData(isInitialFetch = false) {
-        if (!isInitialFetch) {
-            localStorage.setItem('myPlan_plans', JSON.stringify(plansData));
-            localStorage.setItem('myPlan_goals', JSON.stringify(goalsData));
-            localStorage.setItem('myPlan_completion', JSON.stringify(completionData));
+        // 1. 获取当前用户标识
+        const urlParams = new URLSearchParams(window.location.search);
+        let currentUserId = urlParams.get('user') || localStorage.getItem('myPlan_currentUser');
+
+        if (!currentUserId) {
+            currentUserId = prompt('请输入您的专属昵称/代号（手机和电脑输入相同代号即可同步）：') || 'default_user';
+            localStorage.setItem('myPlan_currentUser', currentUserId);
         }
 
-// 优先从网址参数读取（例如 ?user=andy），没有则读取本地缓存
-    const urlParams = new URLSearchParams(window.location.search);
-    let currentUserId = urlParams.get('user') || localStorage.getItem('myPlan_currentUser');
+        // 2. 本地缓存键名加上用户名后缀，避免同一台设备切换代号时混淆
+        const planKey = `myPlan_plans_${currentUserId}`;
+        const goalKey = `myPlan_goals_${currentUserId}`;
+        const compKey = `myPlan_completion_${currentUserId}`;
 
-    // 首次打开且未带参数时，提示输入代号/名字
-    if (!currentUserId) {
-        currentUserId = prompt('请输入您的专属昵称/代号（手机和电脑输入相同代号即可同步）：') || 'default_user';
-        localStorage.setItem('myPlan_currentUser', currentUserId);
-    }
+        // 👇【在这里补充这 5 行代码】初次加载若内存为空，先从该用户的本地缓存读取
+        if (plansData.length === 0) {
+            plansData = JSON.parse(localStorage.getItem(planKey)) || [];
+            goalsData = JSON.parse(localStorage.getItem(goalKey)) || [];
+            completionData = JSON.parse(localStorage.getItem(compKey)) || {};
+        }
 
-    if (supabaseClient) {
-        try {
-            if (isInitialFetch) {
-                const { data, error } = await supabaseClient
-                    .from('schedule_data')
-                    .select('*')
-                    .eq('id', currentUserId)
-                    .single();
+        if (!isInitialFetch) {
+            localStorage.setItem(planKey, JSON.stringify(plansData));
+
+        if (!isInitialFetch) {
+            localStorage.setItem(planKey, JSON.stringify(plansData));
+            localStorage.setItem(goalKey, JSON.stringify(goalsData));
+            localStorage.setItem(compKey, JSON.stringify(completionData));
+        }
+
+        // 3. 与 Supabase 云端同步
+        if (supabaseClient) {
+            try {
+                if (isInitialFetch) {
+                    const { data, error } = await supabaseClient
+                        .from('schedule_data')
+                        .select('*')
+                        .eq('id', currentUserId)
+                        .maybeSingle(); // 使用 maybeSingle 避免查不到记录时抛出异常
+
+                    if (data) {
+                        // 云端存在记录：以云端数据为准同步到本地
+                        plansData = data.plans || [];
+                        goalsData = data.goals || [];
+                        completionData = data.completion || {};
+                        localStorage.setItem(planKey, JSON.stringify(plansData));
+                        localStorage.setItem(goalKey, JSON.stringify(goalsData));
+                        localStorage.setItem(compKey, JSON.stringify(completionData));
+                        renderBoard();
+                    } else {
+                        // 首次创建该用户：把当前本地已写的数据写入云端创建记录
+                        await supabaseClient
+                            .from('schedule_data')
+                            .upsert({
+                                id: currentUserId,
+                                plans: plansData,
+                                goals: goalsData,
+                                completion: completionData,
+                                updated_at: new Date()
+                            });
+                    }
                 } else {
+                    // 用户在页面上添加、勾选、移动、删除时，实时推送云端
                     await supabaseClient
                         .from('schedule_data')
                         .upsert({
@@ -460,9 +497,10 @@
                         });
                 }
             } catch (err) {
-                console.warn("云端同步失败，已保留本地离线数据", err);
+                console.warn("云端同步失败，已保留本地数据", err);
             }
         }
+    }
     }
 
     // 初始化时间轴
